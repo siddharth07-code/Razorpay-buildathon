@@ -1,0 +1,458 @@
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// --------------------------------------------------------
+// ENUMS
+// --------------------------------------------------------
+
+enum CustomerTier {
+  ENTERPRISE
+  GROWTH
+  STARTER
+  D2C
+}
+
+enum PaymentStatus {
+  created
+  authorized
+  captured
+  refunded
+  failed
+}
+
+enum PaymentMethod {
+  card
+  netbanking
+  wallet
+  emi
+  upi
+  nach
+}
+
+enum RecoveryCaseStatus {
+  NEW
+  OPEN
+  ANALYZING
+  DIAGNOSED
+  ACTION_SELECTED
+  AWAITING_APPROVAL
+  PENDING_APPROVAL
+  EXECUTING
+  IN_PROGRESS
+  AWAITING_PAYMENT
+  RECOVERED
+  FAILED
+  ESCALATED
+  STOPPED
+  EXPIRED
+}
+
+enum RecoveryRiskLevel {
+  CRITICAL
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum CasePriority {
+  P0
+  P1
+  P2
+  P3
+}
+
+enum RootCauseType {
+  temporary_payment_failure
+  insufficient_funds
+  authentication_failure
+  payment_method_issue
+  repeated_failure
+  checkout_abandonment
+  subscription_payment_failure
+  overdue_invoice
+  missed_promise_to_pay
+  unknown_other
+  INSUFFICIENT_FUNDS
+  AUTHENTICATION_DROPOFF
+  EXPIRED_CARD
+  MANDATE_BANK_FAILURE
+  UPI_APP_TIMEOUT
+  NETWORK_DOWNTIME
+  SUSPECTED_FRAUD
+  TEMPORARY_GATEWAY_GLITCH
+}
+
+enum RecoveryAction {
+  RETRY_PAYMENT
+  CREATE_PAYMENT_LINK
+  SEND_PAYMENT_LINK
+  REQUEST_PAYMENT_METHOD_UPDATE
+  RETRY_SUBSCRIPTION
+  SEND_NOTIFICATION
+  CREATE_PROMISE_TO_PAY
+  ESCALATE_TO_HUMAN
+  STOP_RECOVERY
+}
+
+enum RecoveryStep {
+  ROOT_CAUSE_ANALYSIS
+  SMART_RETRY_SCHEDULED
+  INTERACTIVE_WHATSAPP_SENT
+  DYNAMIC_PAYMENT_LINK_SENT
+  UPI_COLLECT_DISPATCHED
+  MANDATE_RETRY_TRIGGERED
+  ACCOUNT_MANAGER_ESCALATION
+  RECOVERY_RESOLVED
+  PENDING_HUMAN_APPROVAL
+  RECOVERY_STOPPED
+}
+
+enum AttemptStatus {
+  INITIATED
+  SUCCESS
+  FAILED
+  EXPIRED
+  BLOCKED_BY_POLICY
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  WHATSAPP
+  VOICE
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+// --------------------------------------------------------
+// MODELS
+// --------------------------------------------------------
+
+model Customer {
+  id                     String         @id @default(cuid())
+  name                   String
+  email                  String         @unique
+  phone                  String
+  companyName            String?
+  tier                   CustomerTier   @default(STARTER)
+  lifetimeValue          BigInt         @default(0) // Stored in paise
+  successfulPayments     Int            @default(0)
+  failedPayments         Int            @default(0)
+  recoveryAttempts       Int            @default(0)
+  recoveredAmount        BigInt         @default(0) // Stored in paise
+  preferredPaymentMethod PaymentMethod  @default(card)
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  payments               Payment[]
+  orders                 Order[]
+  subscriptions          Subscription[]
+  invoices               Invoice[]
+  recoveryCases          RecoveryCase[]
+  promiseToPays          PromiseToPay[]
+  notifications          Notification[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([tier])
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  customerId        String
+  razorpayPaymentId String?       @unique
+  razorpayOrderId   String?
+  amount            BigInt        // Stored in paise (e.g. ₹25,000 = 2500000)
+  currency          String        @default("INR")
+  status            PaymentStatus @default(created)
+  method            PaymentMethod @default(card)
+  bank              String?
+  vpa               String?
+  wallet            String?
+  errorCode         String?
+  errorDescription  String?
+  errorSource       String?
+  errorStep         String?
+  errorReason       String?
+  attempts          Int           @default(1)
+  lastAttemptAt     DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  customer          Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  recoveryCases     RecoveryCase[]
+  recoveryAttempts  RecoveryAttempt[]
+  order             Order?        @relation(fields: [razorpayOrderId], references: [razorpayOrderId])
+
+  @@index([razorpayPaymentId])
+  @@index([razorpayOrderId])
+  @@index([customerId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  razorpayOrderId String        @unique
+  customerId      String
+  amount          BigInt        // Stored in paise
+  currency        String        @default("INR")
+  status          String        @default("created")
+  receipt         String?
+  attempts        Int           @default(0)
+  notes           Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  customer        Customer      @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  payments        Payment[]
+  recoveryCases   RecoveryCase[]
+
+  @@index([razorpayOrderId])
+  @@index([customerId])
+}
+
+model Subscription {
+  id                     String         @id @default(cuid())
+  razorpaySubscriptionId String?        @unique
+  customerId             String
+  planId                 String
+  mandateId              String?
+  amount                 BigInt         // Stored in paise
+  status                 String         @default("active")
+  currentPeriodStart     DateTime?
+  currentPeriodEnd       DateTime?
+  createdAt              DateTime       @default(now())
+  updatedAt              DateTime       @updatedAt
+
+  customer               Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  recoveryCases          RecoveryCase[]
+
+  @@index([razorpaySubscriptionId])
+  @@index([customerId])
+}
+
+model Invoice {
+  id                String         @id @default(cuid())
+  razorpayInvoiceId String?        @unique
+  customerId        String
+  amount            BigInt         // Stored in paise
+  currency          String         @default("INR")
+  status            String         @default("issued")
+  dueDate           DateTime?
+  paidAt            DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  customer          Customer       @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  recoveryCases     RecoveryCase[]
+  promiseToPays     PromiseToPay[]
+
+  @@index([razorpayInvoiceId])
+  @@index([customerId])
+}
+
+model RecoveryCase {
+  id                    String             @id @default(cuid())
+  caseNumber            String             @unique
+  customerId            String
+  paymentId             String?
+  orderId               String?
+  subscriptionId        String?
+  invoiceId             String?
+  razorpayPaymentId     String?
+  razorpayOrderId       String?
+  razorpayPaymentLinkId String?
+  razorpaySubscriptionId String?
+  razorpayInvoiceId     String?
+  amountAtRisk          BigInt             // Stored in paise
+  recoverableAmount     BigInt             @default(0) // Stored in paise
+  recoveredAmount       BigInt             @default(0) // Stored in paise
+  currency              String             @default("INR")
+  status                RecoveryCaseStatus @default(OPEN)
+  riskLevel             RecoveryRiskLevel  @default(MEDIUM)
+  riskScore             Int                @default(50) // 0-100
+  recoverabilityScore   Int                @default(80) // 0-100
+  expectedRecoveryValue BigInt             @default(0) // Stored in paise
+  priority              CasePriority       @default(P2)
+  rootCause             RootCauseType      @default(unknown_other)
+  rootCauseDetails      String
+  recommendedAction     RecoveryAction     @default(CREATE_PAYMENT_LINK)
+  selectedAction        RecoveryAction?
+  currentStep           RecoveryStep       @default(ROOT_CAUSE_ANALYSIS)
+  retryCount            Int                @default(0)
+  contactCount          Int                @default(0)
+  actionsTakenCount     Int                @default(0)
+  requiresHumanApproval Boolean            @default(false)
+  paymentLinkUrl        String?
+  aiRecommendation      Json?
+  assignedTo            String?
+  recoveredAt           DateTime?
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+
+  customer              Customer           @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  payment               Payment?           @relation(fields: [paymentId], references: [id])
+  order                 Order?             @relation(fields: [orderId], references: [id])
+  subscription          Subscription?      @relation(fields: [subscriptionId], references: [id])
+  invoice               Invoice?           @relation(fields: [invoiceId], references: [id])
+  recoveryAttempts      RecoveryAttempt[]
+  agentDecisions        AgentDecision[]
+  auditEvents           AuditEvent[]
+  humanApprovals        HumanApproval[]
+  notifications         Notification[]
+
+  @@index([customerId])
+  @@index([paymentId])
+  @@index([status])
+  @@index([riskLevel])
+  @@index([priority])
+  @@index([caseNumber])
+  @@index([createdAt])
+}
+
+model RecoveryAttempt {
+  id                String         @id @default(cuid())
+  recoveryCaseId    String
+  paymentId         String?
+  attemptNumber     Int            @default(1)
+  action            RecoveryAction
+  status            AttemptStatus  @default(INITIATED)
+  razorpayReference String?
+  amount            BigInt         // Stored in paise
+  channel           String?
+  result            Json?
+  notes             String?
+  createdAt         DateTime       @default(now())
+
+  recoveryCase      RecoveryCase   @relation(fields: [recoveryCaseId], references: [id], onDelete: Cascade)
+  payment           Payment?       @relation(fields: [paymentId], references: [id])
+
+  @@index([recoveryCaseId])
+  @@index([action])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AgentDecision {
+  id             String       @id @default(cuid())
+  recoveryCaseId String
+  agent          String       // e.g. "RiskAgent", "RootCauseAgent", "StrategyAgent", "PolicyAgent"
+  decision       String
+  confidence     Float        // 0.00 to 1.00
+  explanation    String
+  inputSnapshot  Json         // JSONB structured input context
+  createdAt      DateTime     @default(now())
+
+  recoveryCase   RecoveryCase @relation(fields: [recoveryCaseId], references: [id], onDelete: Cascade)
+
+  @@index([recoveryCaseId])
+  @@index([agent])
+  @@index([createdAt])
+}
+
+model AuditEvent {
+  id             String       @id @default(cuid())
+  caseId         String?
+  actor          String       // e.g. "RECOVER_AI_AGENT", "RAZORPAY_WEBHOOK", "MERCHANT_ADMIN"
+  eventType      String       // e.g. "CASE_CREATED", "PAYMENT_CONFIRMED", "POLICY_APPROVED"
+  description    String?
+  metadata       Json?        // JSONB event payload
+  timestamp      DateTime     @default(now())
+
+  recoveryCase   RecoveryCase? @relation(fields: [caseId], references: [id], onDelete: SetNull)
+
+  @@index([caseId])
+  @@index([eventType])
+  @@index([actor])
+  @@index([timestamp])
+}
+
+model RazorpayEvent {
+  id                String       @id @default(cuid())
+  eventId           String       @unique // For webhook idempotency
+  eventType         String       // e.g. "payment.captured", "payment.failed"
+  signatureVerified Boolean      @default(false)
+  payload           Json         // JSONB event payload
+  processed         Boolean      @default(false)
+  processedAt       DateTime?
+  receivedAt        DateTime     @default(now())
+
+  @@index([eventId])
+  @@index([eventType])
+  @@index([processed])
+  @@index([receivedAt])
+}
+
+model HumanApproval {
+  id              String         @id @default(cuid())
+  recoveryCaseId  String
+  requestedAction RecoveryAction
+  status          ApprovalStatus @default(PENDING)
+  approvedBy      String?
+  reason          String?
+  createdAt       DateTime       @default(now())
+  resolvedAt      DateTime?
+
+  recoveryCase    RecoveryCase   @relation(fields: [recoveryCaseId], references: [id], onDelete: Cascade)
+
+  @@index([recoveryCaseId])
+  @@index([status])
+}
+
+model PromiseToPay {
+  id          String    @id @default(cuid())
+  customerId  String
+  invoiceId   String?
+  amount      BigInt    // Stored in paise
+  promiseDate DateTime
+  status      String    @default("PENDING") // PENDING, FULFILLED, BROKEN
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  customer    Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  invoice     Invoice?  @relation(fields: [invoiceId], references: [id])
+
+  @@index([customerId])
+  @@index([promiseDate])
+  @@index([status])
+}
+
+model Notification {
+  id             String              @id @default(cuid())
+  customerId     String
+  recoveryCaseId String?
+  channel        NotificationChannel @default(WHATSAPP)
+  status         NotificationStatus  @default(PENDING)
+  message        String
+  sentAt         DateTime?
+  createdAt      DateTime            @default(now())
+
+  customer       Customer            @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  recoveryCase   RecoveryCase?       @relation(fields: [recoveryCaseId], references: [id], onDelete: SetNull)
+
+  @@index([customerId])
+  @@index([recoveryCaseId])
+  @@index([channel])
+  @@index([status])
+}
