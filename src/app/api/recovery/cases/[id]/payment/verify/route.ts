@@ -27,7 +27,21 @@ export async function POST(
 
     if (!razorpayPaymentId) {
       return NextResponse.json(
-        { error: "MISSING_PAYMENT_ID", message: "razorpayPaymentId is required" },
+        { error: "MISSING_PAYMENT_ID", message: "razorpayPaymentId is required for payment verification." },
+        { status: 400 }
+      );
+    }
+
+    if (!razorpayOrderId) {
+      return NextResponse.json(
+        { error: "MISSING_ORDER_ID", message: "razorpayOrderId is required for payment verification." },
+        { status: 400 }
+      );
+    }
+
+    if (!razorpaySignature) {
+      return NextResponse.json(
+        { error: "MISSING_SIGNATURE", message: "razorpaySignature is required for payment verification. Unsigned requests are rejected." },
         { status: 400 }
       );
     }
@@ -49,6 +63,17 @@ export async function POST(
           { status: 404 }
         );
       }
+    }
+
+    // Reject mismatched order ID if case already has an associated order ID
+    if (caseRecord?.razorpayOrderId && caseRecord.razorpayOrderId !== razorpayOrderId) {
+      return NextResponse.json(
+        {
+          error: "ORDER_MISMATCH",
+          message: `Provided order ID '${razorpayOrderId}' does not match registered case order ID '${caseRecord.razorpayOrderId}'.`,
+        },
+        { status: 400 }
+      );
     }
 
     const currentStatus = caseRecord ? caseRecord.status : repoCase.status;
@@ -81,36 +106,41 @@ export async function POST(
       );
     }
 
-    // 3. Server-side HMAC Signature Verification
+    // 3. Server-side HMAC Signature Verification (Checkout signature: order_id + "|" + payment_id)
     const secret = appConfig.razorpay.keySecret || process.env.RAZORPAY_KEY_SECRET;
-    const orderIdToVerify = razorpayOrderId || caseRecord?.razorpayOrderId;
+    if (!secret) {
+      return NextResponse.json(
+        { error: "SERVER_CONFIG_ERROR", message: "Razorpay key secret is not configured on server." },
+        { status: 500 }
+      );
+    }
 
-    if (orderIdToVerify && razorpaySignature && secret && !secret.includes("demo")) {
-      try {
-        const payload = `${orderIdToVerify}|${razorpayPaymentId}`;
-        const generatedSignature = crypto
-          .createHmac("sha256", secret)
-          .update(payload)
-          .digest("hex");
+    const payload = `${razorpayOrderId}|${razorpayPaymentId}`;
+    const generatedSignature = crypto
+      .createHmac("sha256", secret)
+      .update(payload)
+      .digest("hex");
 
-        const isSignatureValid = crypto.timingSafeEqual(
-          Buffer.from(generatedSignature, "utf8"),
-          Buffer.from(razorpaySignature, "utf8")
-        );
-
-        if (!isSignatureValid) {
-          console.error("[VIREON Payment Verify] Signature mismatch for case:", caseId);
-          return NextResponse.json(
-            {
-              error: "INVALID_SIGNATURE",
-              message: "Payment signature verification failed. Settlement rejected.",
-            },
-            { status: 400 }
-          );
-        }
-      } catch (sigErr: any) {
-        console.error("[VIREON Payment Verify] Signature error:", sigErr);
+    let isSignatureValid = false;
+    try {
+      const genBuffer = Buffer.from(generatedSignature, "utf8");
+      const sigBuffer = Buffer.from(razorpaySignature, "utf8");
+      if (genBuffer.length === sigBuffer.length) {
+        isSignatureValid = crypto.timingSafeEqual(genBuffer, sigBuffer);
       }
+    } catch {
+      isSignatureValid = false;
+    }
+
+    if (!isSignatureValid) {
+      console.error("[VIREON Payment Verify] Signature mismatch for case:", caseId);
+      return NextResponse.json(
+        {
+          error: "INVALID_SIGNATURE",
+          message: "Payment signature verification failed. Settlement rejected.",
+        },
+        { status: 400 }
+      );
     }
 
     // 4. Atomically commit recovery via OutcomeService
@@ -119,7 +149,7 @@ export async function POST(
         caseId,
         amountCapturedPaise: amountAtRiskPaise,
         razorpayPaymentId,
-        razorpayOrderId: orderIdToVerify,
+        razorpayOrderId,
       });
 
       if (!confirmResult.success && !(confirmResult as any).alreadyRecovered) {
@@ -150,7 +180,7 @@ export async function POST(
       repoCase.recoveredAmount = repoCase.amount || 25000;
       repoCase.recoveredAt = new Date().toISOString();
       repoCase.razorpayPaymentId = razorpayPaymentId;
-      if (orderIdToVerify) repoCase.razorpayOrderId = orderIdToVerify;
+      if (razorpayOrderId) repoCase.razorpayOrderId = razorpayOrderId;
 
       return NextResponse.json(
         serializeBigInt({

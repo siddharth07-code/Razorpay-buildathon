@@ -126,19 +126,25 @@ export function LiveRecoveryDemoPanel({
         },
       };
 
-      const res = await fetch("/api/webhooks/razorpay", {
+      const res = await fetch("/api/demo/recovery/simulate-webhook", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-razorpay-signature": "mock_signature_test",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          caseId: demoData?.caseId,
+          caseNumber: demoData?.caseNumber || "REC-DEMO-005",
+          amountPaise: demoData?.amountAtRiskPaise || 6750000,
+        }),
       });
 
       if (res.ok) {
         setIsRecovered(true);
         setCurrentStep("RECOVERED");
         if (onRecoveryCompleted) onRecoveryCompleted();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        console.error("Webhook simulation error:", errData);
       }
     } catch (err) {
       console.error("Webhook simulation error", err);

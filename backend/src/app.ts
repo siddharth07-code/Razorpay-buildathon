@@ -42,7 +42,7 @@ app.use("/api", apiRoutes);
 // Root Health Fallback
 app.get("/", (req: Request, res: Response) => {
   res.json({
-    name: "RecoverAI Backend Engine",
+    name: "VIREON Backend Engine",
     status: "online",
     documentation: "/api/health",
   });

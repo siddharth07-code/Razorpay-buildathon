@@ -42,56 +42,62 @@ export function RecoveryFunnel({
           RECOVERY PIPELINE
         </h3>
         <Link
-          href="/operations/graph"
+          href="/operations"
           className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-cyan-400 font-medium transition"
         >
-          <span>View LangGraph Flow</span>
+          <span>View Operations Console</span>
           <ExternalLink className="w-3 h-3" />
         </Link>
       </div>
 
-      {/* 7-Stage Connected Timeline Nodes matching Reference Image */}
-      <div className="relative py-2 px-2">
-        {/* Connecting Line */}
-        <div className="absolute top-[21px] left-6 right-6 h-[2px] bg-[#151E2E] z-0">
-          <div className="h-full bg-gradient-to-r from-emerald-500 via-cyan-500 to-transparent w-[68%]" />
-        </div>
+      {/* 7-Stage Connected Timeline Nodes with Animated Progression Flow */}
+      <div className="overflow-x-auto pb-1 -mx-1 px-1">
+        <div className="relative py-2 px-2 min-w-[480px] sm:min-w-0">
+          {/* Connecting Line Track */}
+          <div className="absolute top-[21px] left-6 right-6 h-[2px] bg-[#151E2E] z-0 overflow-hidden">
+            {/* Animated Flowing Beam */}
+            <div className="h-full bg-gradient-to-r from-emerald-500/80 via-cyan-400 to-transparent w-[68%] animate-beam-flow" />
+          </div>
 
-        <div className="flex items-center justify-between relative z-10">
-          {pipelineNodes.map((node) => {
-            const isCompleted = node.status === "completed";
-            const isActive = node.status === "active";
+          <div className="flex items-center justify-between relative z-10">
+            {pipelineNodes.map((node) => {
+              const isCompleted = node.status === "completed";
+              const isActive = node.status === "active";
 
-            return (
-              <div key={node.step} className="flex flex-col items-center group cursor-default">
-                {/* Node Circle */}
-                <div
-                  className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-mono font-bold transition-all ${
-                    isCompleted
-                      ? "bg-[#080D15] border-2 border-emerald-500 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)]"
-                      : isActive
-                      ? "bg-[#080D15] border-2 border-cyan-400 text-cyan-300 shadow-[0_0_12px_rgba(34,211,238,0.7)] scale-110"
-                      : "bg-[#080D15] border border-slate-700 text-slate-400"
-                  }`}
-                >
-                  {node.step}
+              return (
+                <div key={node.step} className="flex flex-col items-center group cursor-default">
+                  {/* Node Circle */}
+                  <div
+                    className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-mono font-bold transition-all duration-300 relative ${
+                      isCompleted
+                        ? "bg-[#080D15] border-2 border-emerald-500 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)] group-hover:scale-105"
+                        : isActive
+                        ? "bg-[#080D15] border-2 border-cyan-400 text-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.8)] scale-110"
+                        : "bg-[#080D15] border border-slate-700 text-slate-400 group-hover:border-slate-600"
+                    }`}
+                  >
+                    {isActive && (
+                      <span className="absolute -inset-1 rounded-full border border-cyan-400/50 animate-ping opacity-50 pointer-events-none" />
+                    )}
+                    {node.step}
+                  </div>
+
+                  {/* Step Label */}
+                  <span
+                    className={`text-[9px] font-bold tracking-wider uppercase mt-2 transition-colors ${
+                      isActive
+                        ? "text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.6)]"
+                        : isCompleted
+                        ? "text-slate-300 group-hover:text-white"
+                        : "text-slate-500 group-hover:text-slate-400"
+                    }`}
+                  >
+                    {node.label}
+                  </span>
                 </div>
-
-                {/* Step Label */}
-                <span
-                  className={`text-[9px] font-bold tracking-wider uppercase mt-2 transition-colors ${
-                    isActive
-                      ? "text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.5)]"
-                      : isCompleted
-                      ? "text-slate-300"
-                      : "text-slate-400"
-                  }`}
-                >
-                  {node.label}
-                </span>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       </div>
 

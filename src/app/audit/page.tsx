@@ -16,7 +16,7 @@ export default function AuditPage() {
       payload: {
         mode: "sandbox",
         currency: "INR",
-        merchant: "SaaSify Technologies India",
+        merchant: "VIREON Technologies India",
       },
       timestamp: new Date(Date.now() - 3600 * 72 * 1000).toISOString(),
     },

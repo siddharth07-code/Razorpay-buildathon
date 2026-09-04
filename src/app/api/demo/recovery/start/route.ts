@@ -8,7 +8,8 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const result = await demoService.startDemoRecovery({
-      amountRupees: body.amount ? parseFloat(body.amount) : 25000,
+      caseNumber: body.caseNumber,
+      amountRupees: body.amount ? parseFloat(body.amount) : undefined,
       customerName: body.customerName,
     });
     return NextResponse.json(serializeBigInt(result));

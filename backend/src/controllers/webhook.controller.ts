@@ -3,7 +3,7 @@ import { webhookService } from "../services/webhook.service";
 
 export async function handleRazorpayWebhook(req: Request, res: Response) {
   try {
-    const rawBody = typeof req.body === "string" ? req.body : JSON.stringify(req.body);
+    const rawBody = (req as any).rawBody || (typeof req.body === "string" ? req.body : JSON.stringify(req.body));
     const signature = (req.headers["x-razorpay-signature"] as string) || "";
 
     const result = await webhookService.handleWebhook(rawBody, signature);

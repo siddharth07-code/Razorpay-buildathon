@@ -237,10 +237,12 @@ export class RecoveryOrchestrator {
       failureReason: recCase.rootCause || undefined,
     });
 
+    const rootCauseUpper = (recCase.rootCause ? recCase.rootCause.toUpperCase() : "AUTHENTICATION_FAILURE") as any;
+
     const strategy = strategyService.selectStrategy({
       amountAtRisk: recCase.amountAtRisk,
       paymentMethod: recCase.payment?.method || undefined,
-      rootCause: "AUTHENTICATION_FAILURE",
+      rootCause: rootCauseUpper,
       risk,
       recoveryAttemptsCount: recCase.retryCount,
       customerContactCount: recCase.contactCount,

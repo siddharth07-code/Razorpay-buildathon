@@ -118,9 +118,10 @@ export function RazorpayCheckoutButton({
           setIsInitializing(false);
           setIsProcessing(true);
 
+          let verifiedCaseData: any = null;
           try {
             // Verify payment server-side with HMAC check
-            await fetch(`/api/recovery/cases/${caseId}/payment/verify`, {
+            const vRes = await fetch(`/api/recovery/cases/${caseId}/payment/verify`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -129,13 +130,20 @@ export function RazorpayCheckoutButton({
                 razorpaySignature: response.razorpay_signature,
               }),
             });
+            if (vRes.ok) {
+              const vData = await vRes.json();
+              verifiedCaseData = vData.case || vData;
+            }
           } catch (vErr) {
             console.error("[VIREON Checkout] Verification request error:", vErr);
           }
 
           // Invoke client callback (Note: authoritative settlement will be confirmed by Webhook/PostgreSQL)
           if (onSuccess) {
-            onSuccess(response);
+            onSuccess({
+              ...response,
+              updatedCase: verifiedCaseData,
+            });
           }
         },
       };

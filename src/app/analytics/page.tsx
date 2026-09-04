@@ -262,7 +262,8 @@ export default function AnalyticsPage() {
         </div>
 
         {/* CSS/SVG Responsive Bar Graph */}
-        <div className="h-64 pt-6 flex items-end gap-3 border-b border-slate-800 pb-2">
+        <div className="overflow-x-auto pb-2">
+          <div className="h-64 pt-6 flex items-end gap-3 border-b border-slate-800 pb-2 min-w-[480px]">
           {trendData.map((d, idx) => {
             const atRiskHeight = Math.max(8, Math.round((d.atRiskINR / maxTrendVal) * 100));
             const recoverableHeight = Math.max(6, Math.round((d.recoverableINR / maxTrendVal) * 100));
@@ -299,6 +300,7 @@ export default function AnalyticsPage() {
               </div>
             );
           })}
+          </div>
         </div>
       </div>
 

@@ -67,7 +67,7 @@ export default function OverviewPage() {
       <div className="flex flex-col lg:flex-row items-start gap-5 w-full">
         <div className="flex-1 w-full space-y-5 min-w-0">
           {/* Top Row: 4 Dominant Financial KPIs (Left) + Holographic Structure (Right) */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch animate-fadeInUp delay-1">
             {/* 4 Financial KPI Cards */}
             <div className="xl:col-span-9 flex flex-col justify-between">
               <VireonKpiCards
@@ -88,7 +88,7 @@ export default function OverviewPage() {
           </div>
 
           {/* Middle Row: Recovery Pipeline (Left) + Recovery By Source (Center) + Recent Activity (Right) */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-stretch animate-fadeInUp delay-2">
             {/* Recovery Pipeline Timeline */}
             <div className="lg:col-span-5 flex">
               <div className="w-full">
@@ -123,7 +123,7 @@ export default function OverviewPage() {
           </div>
 
           {/* Bottom Row: Active Recovery Cases Operations Table */}
-          <div>
+          <div className="animate-fadeInUp delay-3">
             <ConciseCasesTable
               cases={cases}
               onCaseUpdated={loadData}

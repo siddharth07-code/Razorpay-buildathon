@@ -339,62 +339,117 @@ export class DemoService {
    * Start a controlled real Razorpay Sandbox recovery scenario on the Hero demo case (REC-DEMO-005 Orion Media ₹67,500)
    */
   public async startDemoRecovery(options?: { amountRupees?: number; customerName?: string; caseNumber?: string }) {
-    const targetCaseNumber = options?.caseNumber || "REC-DEMO-005";
-    const amountRupees = options?.amountRupees || 67500;
-    const customerName = options?.customerName || "Orion Media";
-    const amountPaise = toPaise(amountRupees);
+    try {
+      const targetCaseNumber = options?.caseNumber || "REC-DEMO-005";
 
-    // 1. Ensure portfolio is initialized
-    await this.ensureDemoPortfolio();
+      // 1. Ensure portfolio is initialized
+      await this.ensureDemoPortfolio();
 
-    let targetCase = await prisma.recoveryCase.findUnique({
-      where: { caseNumber: targetCaseNumber },
-    });
+      let targetCase = await prisma.recoveryCase.findUnique({
+        where: { caseNumber: targetCaseNumber },
+        include: { customer: true, payment: true },
+      });
 
-    if (!targetCase) {
-      targetCase = await this.ensureCanonicalDemoCase();
+      if (!targetCase) {
+        targetCase = await this.ensureCanonicalDemoCase();
+      }
+
+      const amountRupees = options?.amountRupees || (targetCase?.amountAtRisk ? Number(targetCase.amountAtRisk) / 100 : 67500);
+      const customerName = options?.customerName || targetCase?.customer?.name || "Orion Media";
+      const amountPaise = toPaise(amountRupees);
+
+      // Inspect target case state: if already progressed (AWAITING_PAYMENT, RECOVERED, etc.),
+      // safely reset ONLY this case into NEW starting state to run the autonomous recovery loop safely
+      if (targetCase.status !== RecoveryCaseStatus.NEW && targetCase.status !== RecoveryCaseStatus.OPEN) {
+        await prisma.$transaction(async (tx) => {
+          await tx.recoveryAttempt.deleteMany({ where: { recoveryCaseId: targetCase!.id } });
+          await tx.agentDecision.deleteMany({ where: { recoveryCaseId: targetCase!.id } });
+          await tx.auditEvent.deleteMany({ where: { caseId: targetCase!.id } });
+          await tx.humanApproval.deleteMany({ where: { recoveryCaseId: targetCase!.id } });
+
+          await tx.recoveryCase.update({
+            where: { id: targetCase!.id },
+            data: {
+              status: RecoveryCaseStatus.NEW,
+              currentStep: RecoveryStep.ROOT_CAUSE_ANALYSIS,
+              recoveredAmount: 0n,
+              recoveredAt: null,
+              paymentLinkUrl: null,
+              razorpayPaymentLinkId: null,
+              razorpayOrderId: null,
+              razorpayPaymentId: null,
+              retryCount: 0,
+              contactCount: 0,
+              actionsTakenCount: 0,
+              requiresHumanApproval: false,
+            },
+          });
+
+          if (targetCase!.paymentId) {
+            await tx.payment.update({
+              where: { id: targetCase!.paymentId },
+              data: {
+                status: PaymentStatus.failed,
+                errorCode: "PAYMENT_AUTHENTICATION_FAILED",
+                errorDescription: "Card Authentication Failure / 3DS dropoff",
+              },
+            });
+          }
+        });
+
+        targetCase = (await prisma.recoveryCase.findUnique({
+          where: { id: targetCase.id },
+          include: { customer: true, payment: true },
+        }))!;
+      }
+
+      // 2. Step 2: Risk & Root Cause Analysis
+      const analysis = await recoveryOrchestrator.analyzeCase(targetCase.id);
+
+      // 3. Step 3: Strategy Selection
+      const strategy = await recoveryOrchestrator.selectRecoveryAction(targetCase.id);
+
+      // 4. Step 4: Policy Validation
+      const policy = await recoveryOrchestrator.validatePolicy(targetCase.id);
+
+      // 5. Step 5: Execution Boundary
+      let execution: any = null;
+      if (!policy.requiresHumanApproval && policy.allowed) {
+        execution = await recoveryOrchestrator.executeRecoveryAction(targetCase.id);
+      }
+
+      // Fetch updated case state
+      const finalCase = await prisma.recoveryCase.findUnique({
+        where: { id: targetCase.id },
+        include: { customer: true, payment: true, recoveryAttempts: { take: 1, orderBy: { createdAt: "desc" } } },
+      });
+
+      return serializeBigInt({
+        success: true,
+        mode: "RAZORPAY_SANDBOX",
+        demoScenario: `${customerName} ₹${amountRupees.toLocaleString("en-IN")} Live Recovery Flow`,
+        caseId: finalCase!.id,
+        caseNumber: finalCase!.caseNumber,
+        amountAtRiskRupees: amountRupees,
+        amountAtRiskPaise: amountPaise,
+        status: finalCase!.status,
+        currentStep: finalCase!.currentStep,
+        paymentLinkUrl: finalCase!.paymentLinkUrl,
+        razorpayPaymentLinkId: finalCase!.razorpayPaymentLinkId,
+        risk: analysis.risk,
+        diagnosis: analysis.diagnosis,
+        strategy,
+        policy,
+        execution,
+        instructions: "To complete the test recovery, open Razorpay Checkout in Test Mode and complete checkout.",
+      });
+    } catch (err: any) {
+      console.error("[DemoService.startDemoRecovery Error]:", err);
+      return serializeBigInt({
+        success: false,
+        error: err?.message || "Failed to execute autonomous demo recovery",
+      });
     }
-
-    // 2. Step 2: Risk & Root Cause Analysis
-    const analysis = await recoveryOrchestrator.analyzeCase(targetCase.id);
-
-    // 3. Step 3: Strategy Selection
-    const strategy = await recoveryOrchestrator.selectRecoveryAction(targetCase.id);
-
-    // 4. Step 4: Policy Validation
-    const policy = await recoveryOrchestrator.validatePolicy(targetCase.id);
-
-    // 5. Step 5: Execution Boundary
-    let execution: any = null;
-    if (!policy.requiresHumanApproval && policy.allowed) {
-      execution = await recoveryOrchestrator.executeRecoveryAction(targetCase.id);
-    }
-
-    // Fetch updated case state
-    const finalCase = await prisma.recoveryCase.findUnique({
-      where: { id: targetCase.id },
-      include: { customer: true, payment: true, recoveryAttempts: { take: 1, orderBy: { createdAt: "desc" } } },
-    });
-
-    return serializeBigInt({
-      success: true,
-      mode: "RAZORPAY_SANDBOX",
-      demoScenario: `${customerName} ₹${amountRupees.toLocaleString("en-IN")} Live Recovery Flow`,
-      caseId: finalCase!.id,
-      caseNumber: finalCase!.caseNumber,
-      amountAtRiskRupees: amountRupees,
-      amountAtRiskPaise: amountPaise,
-      status: finalCase!.status,
-      currentStep: finalCase!.currentStep,
-      paymentLinkUrl: finalCase!.paymentLinkUrl,
-      razorpayPaymentLinkId: finalCase!.razorpayPaymentLinkId,
-      risk: analysis.risk,
-      diagnosis: analysis.diagnosis,
-      strategy,
-      policy,
-      execution,
-      instructions: "To complete the test recovery, open Razorpay Checkout in Test Mode and complete checkout.",
-    });
   }
 
   /**
@@ -814,7 +869,7 @@ export class DemoService {
    * Safely reset ONLY demo/test records (never touches production data)
    */
   public async resetDemoRecovery() {
-    // Find all demo cases with REC-DEMO, REC-SUB-, REC-CHK-, or REC-INV- prefix
+    // Find all demo and test cases to reset
     const demoCases = await prisma.recoveryCase.findMany({
       where: {
         OR: [
@@ -822,6 +877,15 @@ export class DemoService {
           { caseNumber: { startsWith: "REC-SUB-" } },
           { caseNumber: { startsWith: "REC-CHK-" } },
           { caseNumber: { startsWith: "REC-INV-" } },
+          { caseNumber: { startsWith: "REC-LG-" } },
+          { caseNumber: { startsWith: "REC-REG-" } },
+          { caseNumber: { startsWith: "REC-ADV-" } },
+          { caseNumber: { startsWith: "REC-ATOMIC-" } },
+          { caseNumber: { startsWith: "REC-TEST-" } },
+          { caseNumber: { startsWith: "REC-AUDIT-" } },
+          { caseNumber: { startsWith: "REC-CHRG-" } },
+          { caseNumber: { startsWith: "REC-PLINK-" } },
+          { caseNumber: { startsWith: "REC-2026-" } },
           { caseNumber: { startsWith: "TEST-" } },
           { customer: { email: { endsWith: ".demo" } } },
         ],

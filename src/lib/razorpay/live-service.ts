@@ -71,7 +71,7 @@ export class RazorpayService implements IRazorpayService {
       },
       reminder_enable: true,
       notes: {
-        source: "RecoverAI_SubscriptionRecovery",
+        source: "VIREON_SubscriptionRecovery",
         subscription_id: params.subscriptionId,
         ...params.notes,
       },
@@ -111,7 +111,7 @@ export class RazorpayService implements IRazorpayService {
       currency: params.currency || "INR",
       receipt: params.receipt || `rcpt_${Date.now()}`,
       notes: {
-        source: "RecoverAI_Agent",
+        source: "VIREON_Agent",
         ...params.notes,
       },
       payment_capture: params.payment_capture ?? 1,
@@ -175,7 +175,7 @@ export class RazorpayService implements IRazorpayService {
       },
       reminder_enable: params.reminder_enable ?? true,
       notes: {
-        source: "RecoverAI_SmartDunning",
+        source: "VIREON_SmartDunning",
         ...params.notes,
       },
     };

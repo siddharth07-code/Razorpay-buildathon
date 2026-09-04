@@ -117,12 +117,12 @@ export function RecoveryCaseDrawer({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/70 backdrop-blur-sm animate-fadeIn">
-      <div className="bg-[#0F1523] border-l border-[#1E293B] w-full max-w-xl h-full p-6 overflow-y-auto shadow-2xl space-y-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-end bg-black/75 backdrop-blur-sm animate-fadeIn">
+      <div className="bg-[#080D15] border-l border-[#151E2E] w-full max-w-full sm:max-w-xl h-full p-4 sm:p-6 overflow-y-auto shadow-2xl space-y-5 animate-slideInRight">
         {/* Sandbox Indicator Banner */}
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-2.5 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse status-dot-active" />
             <span className="font-semibold text-amber-300 font-mono text-[11px]">RAZORPAY SANDBOX / TEST MODE</span>
           </div>
           <span className="text-[10px] text-slate-400 font-mono">Simulated Settlement Supported</span>
@@ -382,8 +382,11 @@ export function RecoveryCaseDrawer({
                   caseNumber={currentCase.caseNumber}
                   amount={currentCase.amount}
                   customerName={currentCase.customer?.name}
-                  onSuccess={async (res) => {
-                    setActionMessage({ text: "Payment processed! Verifying webhook settlement..." });
+                  onSuccess={async (res: any) => {
+                    setActionMessage({ text: "Payment confirmed! Authoritative settlement committed." });
+                    if (res?.updatedCase) {
+                      setCurrentCase(res.updatedCase);
+                    }
                     if (onCaseUpdated) onCaseUpdated();
                     // Refetch latest authoritative state
                     setTimeout(async () => {
@@ -391,13 +394,16 @@ export function RecoveryCaseDrawer({
                         const cRes = await fetch(`/api/cases/${currentCase.id}`);
                         if (cRes.ok) {
                           const updatedData = await cRes.json();
-                          if (updatedData.case) setCurrentCase(updatedData.case);
+                          const freshCase = updatedData.case || updatedData;
+                          if (freshCase && freshCase.id) {
+                            setCurrentCase(freshCase);
+                          }
                         }
                       } catch (e) {
                         console.error(e);
                       }
                       if (onCaseUpdated) onCaseUpdated();
-                    }, 1500);
+                    }, 500);
                   }}
                   onError={(err) => {
                     setActionMessage({ text: err?.message || "Checkout failed", isError: true });
@@ -452,10 +458,10 @@ export function RecoveryCaseDrawer({
               <button
                 disabled={actionLoading}
                 onClick={() => handleExecuteAction("CONTINUE_RECOVERY")}
-                className="w-full flex items-center justify-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50"
               >
                 <ArrowRight className="w-3.5 h-3.5" />
-                <span>{actionLoading ? "Executing..." : "Execute Recovery Strategy"}</span>
+                <span>{actionLoading ? "Executing Recovery..." : "Execute Recovery Strategy"}</span>
               </button>
             </div>
           ) : currentCase.status === "AWAITING_APPROVAL" || currentCase.status === "PENDING_APPROVAL" ? (
@@ -473,18 +479,18 @@ export function RecoveryCaseDrawer({
                 <button
                   disabled={actionLoading}
                   onClick={() => handleExecuteAction("CONTINUE_RECOVERY")}
-                  className="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg transition disabled:opacity-50"
+                  className="flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold py-2 px-3 rounded-lg transition hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50"
                 >
                   <UserCheck className="w-3.5 h-3.5" />
-                  <span>Approve</span>
+                  <span>{actionLoading ? "Approving..." : "Approve"}</span>
                 </button>
                 <button
                   disabled={actionLoading}
                   onClick={() => handleExecuteAction("STOP_RECOVERY")}
-                  className="flex items-center justify-center gap-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 text-xs font-semibold py-2 px-3 rounded-lg transition disabled:opacity-50"
+                  className="flex items-center justify-center gap-1.5 bg-rose-600/20 hover:bg-rose-600/30 text-rose-400 border border-rose-500/30 text-xs font-semibold py-2 px-3 rounded-lg transition hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50"
                 >
                   <XCircle className="w-3.5 h-3.5" />
-                  <span>Reject</span>
+                  <span>{actionLoading ? "Rejecting..." : "Reject"}</span>
                 </button>
               </div>
             </div>
@@ -500,20 +506,20 @@ export function RecoveryCaseDrawer({
                 <button
                   disabled={actionLoading}
                   onClick={() => handleExecuteAction("ANALYZE")}
-                  className="w-full flex items-center justify-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-md transition hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-indigo-200" />
-                  <span>{actionLoading ? "Analyzing..." : "Run AI Triage"}</span>
+                  <span>{actionLoading ? "Running AI Triage..." : "Run AI Triage"}</span>
                 </button>
               )}
               {availability.canContinueRecovery && !availability.canAnalyze && (
                 <button
                   disabled={actionLoading}
                   onClick={() => handleExecuteAction("CONTINUE_RECOVERY")}
-                  className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition disabled:opacity-50"
+                  className="w-full flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2.5 px-4 rounded-xl transition hover:-translate-y-0.5 active:scale-[0.98] disabled:opacity-50"
                 >
                   <ArrowRight className="w-3.5 h-3.5" />
-                  <span>Continue Recovery</span>
+                  <span>{actionLoading ? "Continuing..." : "Continue Recovery"}</span>
                 </button>
               )}
             </div>

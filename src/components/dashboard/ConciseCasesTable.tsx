@@ -25,7 +25,7 @@ export function ConciseCasesTable({
       caseNumber: "REC-2026-00124",
       customer: { name: "Acme Technologies India Pvt Ltd" },
       source: "AUTHENTICATION",
-      amount: 2500000,
+      amount: 25000,
       status: "AWAITING_PAYMENT",
       lastEvent: "Payment link sent",
       updatedAt: new Date(Date.now() - 2 * 60000).toISOString(),
@@ -35,7 +35,7 @@ export function ConciseCasesTable({
       caseNumber: "REC-2026-00123",
       customer: { name: "BetaSoft Systems" },
       source: "PAYMENT GATEWAY",
-      amount: 12450000,
+      amount: 124500,
       status: "AWAITING_APPROVAL",
       lastEvent: "Approval required",
       updatedAt: new Date(Date.now() - 6 * 60000).toISOString(),
@@ -45,7 +45,7 @@ export function ConciseCasesTable({
       caseNumber: "REC-2026-00122",
       customer: { name: "Globex Pvt Ltd" },
       source: "PAYMENT GATEWAY",
-      amount: 7500000,
+      amount: 75000,
       status: "EXECUTING",
       lastEvent: "Recovery executing",
       updatedAt: new Date(Date.now() - 12 * 60000).toISOString(),
@@ -55,7 +55,7 @@ export function ConciseCasesTable({
       caseNumber: "REC-2026-00121",
       customer: { name: "Initech" },
       source: "SUBSCRIPTION",
-      amount: 4890000,
+      amount: 48900,
       status: "RECOVERED",
       lastEvent: "Payment captured",
       updatedAt: new Date(Date.now() - 18 * 60000).toISOString(),
@@ -65,7 +65,7 @@ export function ConciseCasesTable({
       caseNumber: "REC-2026-00120",
       customer: { name: "Umbrella Corp" },
       source: "AUTHENTICATION",
-      amount: 3200000,
+      amount: 32000,
       status: "DIAGNOSED",
       lastEvent: "Diagnosis completed",
       updatedAt: new Date(Date.now() - 22 * 60000).toISOString(),
@@ -200,11 +200,16 @@ export function ConciseCasesTable({
                     {/* STATE */}
                     <td className="py-3.5 pr-4">
                       <span
-                        className={`text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase tracking-wider ${getStatusBadge(
+                        className={`inline-flex items-center gap-1.5 text-[9px] px-2 py-0.5 rounded font-mono font-bold uppercase tracking-wider ${getStatusBadge(
                           c.status
                         )}`}
                       >
-                        {c.status.replace("_", " ")}
+                        {["AWAITING_PAYMENT", "EXECUTING", "IN_PROGRESS", "AWAITING_APPROVAL", "ANALYZING"].includes(c.status) ? (
+                          <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse status-dot-active" />
+                        ) : c.status === "RECOVERED" ? (
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        ) : null}
+                        <span>{c.status.replace("_", " ")}</span>
                       </span>
                     </td>
 

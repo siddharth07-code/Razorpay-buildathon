@@ -17,7 +17,7 @@ export const config = {
     mode: (process.env.RAZORPAY_MODE || "mock").toLowerCase() as "mock" | "sandbox" | "live",
   },
   merchant: {
-    name: process.env.NEXT_PUBLIC_MERCHANT_NAME || "SaaSify Technologies India Pvt Ltd",
+    name: process.env.NEXT_PUBLIC_MERCHANT_NAME || "VIREON Technologies Pvt Ltd",
     currency: process.env.NEXT_PUBLIC_CURRENCY || "INR",
     timezone: process.env.NEXT_PUBLIC_DEFAULT_TIMEZONE || "Asia/Kolkata",
   },

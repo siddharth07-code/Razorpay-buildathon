@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -9,17 +9,33 @@ import {
   Bot,
   SlidersHorizontal,
   History,
-  Network,
   Activity,
   TrendingDown,
   TrendingUp,
-  Database,
-  CheckCircle2,
-  Zap,
+  X,
 } from "lucide-react";
 
 export function Sidebar() {
   const pathname = usePathname();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  useEffect(() => {
+    const handleToggle = () => setMobileOpen((prev) => !prev);
+    const handleClose = () => setMobileOpen(false);
+
+    window.addEventListener("vireon:toggle-sidebar", handleToggle);
+    window.addEventListener("vireon:close-sidebar", handleClose);
+
+    return () => {
+      window.removeEventListener("vireon:toggle-sidebar", handleToggle);
+      window.removeEventListener("vireon:close-sidebar", handleClose);
+    };
+  }, []);
+
+  // Close mobile drawer on route navigation
+  useEffect(() => {
+    setMobileOpen(false);
+  }, [pathname]);
 
   const coreNav = [
     {
@@ -69,23 +85,17 @@ export function Sidebar() {
       href: "/simulator",
       icon: SlidersHorizontal,
     },
-    {
-      name: "LangGraph Flow",
-      href: "/operations/graph",
-      icon: Network,
-    },
   ];
 
-  return (
-    <aside className="w-[230px] flex-shrink-0 bg-[#080D15] border-r border-[#151E2E] flex flex-col justify-between h-screen sticky top-0 select-none overflow-y-auto z-20">
+  const renderNavContent = (isDrawer = false) => (
+    <div className="flex flex-col justify-between h-full min-h-full">
       <div className="p-4 space-y-6">
         {/* VIREON Brand Header */}
-        <div className="px-2 pt-1 pb-1">
+        <div className="px-2 pt-1 pb-1 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
             {/* Stylized Hex/V Monogram Icon */}
             <div className="relative w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-500 p-[1px] shadow-lg shadow-blue-900/30 group-hover:shadow-cyan-500/20 transition-all">
               <div className="w-full h-full bg-[#080D15] rounded-[7px] flex items-center justify-center relative overflow-hidden">
-                {/* Glowing subtle V shape */}
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -109,6 +119,17 @@ export function Sidebar() {
               </span>
             </div>
           </Link>
+
+          {/* Close Button on Mobile Drawer */}
+          {isDrawer && (
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-[#151E2E] transition-colors"
+              aria-label="Close navigation"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
         </div>
 
         {/* Navigation Sections */}
@@ -126,23 +147,23 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group ${
                     isActive
                       ? "bg-gradient-to-r from-blue-950/80 to-cyan-950/40 text-white border-l-2 border-cyan-400 font-semibold shadow-sm shadow-cyan-950/20"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-[#0E141C]"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-[#0E141C] hover:translate-x-0.5"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Icon
-                      className={`w-3.5 h-3.5 ${
-                        isActive ? "text-cyan-400" : "text-slate-400"
+                      className={`w-3.5 h-3.5 transition-colors ${
+                        isActive ? "text-cyan-400" : "text-slate-400 group-hover:text-cyan-400"
                       }`}
                     />
                     <span>{item.name}</span>
                   </div>
 
                   {item.badge && (
-                    <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                    <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 status-dot-active">
                       {item.badge}
                     </span>
                   )}
@@ -164,16 +185,16 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group ${
                     isActive
                       ? "bg-gradient-to-r from-violet-950/80 to-indigo-950/40 text-white border-l-2 border-violet-400 font-semibold shadow-sm"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-[#0E141C]"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-[#0E141C] hover:translate-x-0.5"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Icon
-                      className={`w-3.5 h-3.5 ${
-                        isActive ? "text-violet-400" : "text-slate-400"
+                      className={`w-3.5 h-3.5 transition-colors ${
+                        isActive ? "text-violet-400" : "text-slate-400 group-hover:text-violet-400"
                       }`}
                     />
                     <span>{item.name}</span>
@@ -196,16 +217,16 @@ export function Sidebar() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 group ${
                     isActive
                       ? "bg-gradient-to-r from-blue-950/80 to-indigo-950/40 text-white border-l-2 border-blue-400 font-semibold shadow-sm"
-                      : "text-slate-400 hover:text-slate-200 hover:bg-[#0E141C]"
+                      : "text-slate-400 hover:text-slate-200 hover:bg-[#0E141C] hover:translate-x-0.5"
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Icon
-                      className={`w-3.5 h-3.5 ${
-                        isActive ? "text-blue-400" : "text-slate-400"
+                      className={`w-3.5 h-3.5 transition-colors ${
+                        isActive ? "text-blue-400" : "text-slate-400 group-hover:text-blue-400"
                       }`}
                     />
                     <span>{item.name}</span>
@@ -231,7 +252,7 @@ export function Sidebar() {
             </span>
           </div>
 
-          <div className="space-y-1 pt-1 border-t border-[#151E2E]/60 text-[10px] text-slate-400">
+          <div className="space-y-1 pt-1 border-t border-[#151E2E]/60 text-[10px] text-slate-400 font-mono">
             <div className="flex justify-between items-center">
               <span className="text-slate-400">PostgreSQL</span>
               <span className="text-emerald-400 font-medium">Connected</span>
@@ -261,6 +282,31 @@ export function Sidebar() {
           <span className="font-mono">v2.4.0</span>
         </div>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* 1. Desktop Fixed Sidebar (visible >= lg: 1024px) */}
+      <aside className="hidden lg:flex w-[230px] flex-shrink-0 bg-[#080D15] border-r border-[#151E2E] flex-col justify-between h-screen sticky top-0 select-none overflow-y-auto z-20">
+        {renderNavContent(false)}
+      </aside>
+
+      {/* 2. Mobile / Tablet Responsive Drawer (visible < lg) */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden flex">
+          {/* Backdrop Blur Overlay */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm animate-fadeIn"
+            onClick={() => setMobileOpen(false)}
+          />
+
+          {/* Slide-in Drawer Container */}
+          <div className="relative w-[280px] max-w-[85vw] h-full bg-[#080D15] border-r border-[#151E2E] z-50 flex flex-col justify-between overflow-y-auto shadow-2xl animate-slideInLeft">
+            {renderNavContent(true)}
+          </div>
+        </div>
+      )}
+    </>
   );
 }

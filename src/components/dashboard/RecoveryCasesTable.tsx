@@ -58,12 +58,20 @@ export function RecoveryCasesTable({
     switch (status) {
       case "RECOVERED":
         return "bg-emerald-500/10 text-emerald-400 border-emerald-500/30";
-      case "IN_PROGRESS":
-        return "bg-razorpay-500/10 text-razorpay-400 border-razorpay-500/30";
-      case "OPEN":
+      case "AWAITING_PAYMENT":
         return "bg-amber-500/10 text-amber-400 border-amber-500/30";
-      case "ESCALATED":
+      case "AWAITING_APPROVAL":
+        return "bg-violet-500/10 text-violet-400 border-violet-500/30";
+      case "ACTION_SELECTED":
         return "bg-purple-500/10 text-purple-400 border-purple-500/30";
+      case "DIAGNOSED":
+        return "bg-sky-500/10 text-sky-400 border-sky-500/30";
+      case "IN_PROGRESS":
+        return "bg-blue-500/10 text-blue-400 border-blue-500/30";
+      case "OPEN":
+        return "bg-slate-500/10 text-slate-300 border-slate-500/30";
+      case "ESCALATED":
+        return "bg-rose-500/10 text-rose-400 border-rose-500/30";
       default:
         return "bg-slate-500/10 text-slate-400 border-slate-500/30";
     }
@@ -80,24 +88,24 @@ export function RecoveryCasesTable({
             placeholder="Search by case, merchant, or error code..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-900/90 border border-slate-800 rounded-md pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-razorpay-500 transition font-mono"
+            className="w-full bg-slate-900/90 border border-slate-800 rounded-md pl-8 pr-3 py-1.5 text-xs text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 transition font-mono"
           />
         </div>
 
         <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0 text-xs">
           {/* Status Filter */}
           <div className="flex items-center gap-1 bg-slate-900/90 p-0.5 rounded-md border border-slate-800">
-            {["ALL", "IN_PROGRESS", "OPEN", "RECOVERED"].map((status) => (
+            {["ALL", "AWAITING_PAYMENT", "AWAITING_APPROVAL", "ACTION_SELECTED", "DIAGNOSED", "IN_PROGRESS", "OPEN", "RECOVERED"].map((status) => (
               <button
                 key={status}
                 onClick={() => setStatusFilter(status)}
                 className={`px-2.5 py-1 rounded text-[11px] font-medium transition whitespace-nowrap ${
                   statusFilter === status
-                    ? "bg-razorpay-600 text-white shadow-sm"
+                    ? "bg-blue-600 text-white shadow-sm"
                     : "text-slate-400 hover:text-white"
                 }`}
               >
-                {status === "ALL" ? "All Status" : status.replace("_", " ")}
+                {status === "ALL" ? "All Status" : status.replace(/_/g, " ")}
               </button>
             ))}
           </div>
@@ -212,11 +220,16 @@ export function RecoveryCasesTable({
                     {/* Status */}
                     <td className="py-3 px-3.5">
                       <span
-                        className={`text-[10px] px-2 py-0.5 rounded border font-semibold font-mono ${getStatusBadge(
+                        className={`inline-flex items-center gap-1.5 text-[10px] px-2 py-0.5 rounded border font-semibold font-mono ${getStatusBadge(
                           item.status
                         )}`}
                       >
-                        {item.status.replace("_", " ")}
+                        {["AWAITING_PAYMENT", "EXECUTING", "IN_PROGRESS", "AWAITING_APPROVAL", "ANALYZING", "ACTION_SELECTED"].includes(item.status) ? (
+                          <span className="w-1.5 h-1.5 rounded-full bg-current animate-pulse status-dot-active" />
+                        ) : item.status === "RECOVERED" ? (
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                        ) : null}
+                        <span>{item.status.replace("_", " ")}</span>
                       </span>
                     </td>
 

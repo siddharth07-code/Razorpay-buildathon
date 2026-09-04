@@ -107,7 +107,7 @@ export class EventService {
       actor: "EVENT_SERVICE",
       timestamp: new Date().toISOString(),
       status: "success",
-      description: "SSE connection established with RecoverAI Operations Console",
+      description: "SSE connection established with VIREON Operations Console",
       metadata: { clientId, subscribedCaseId: caseId || "GLOBAL" },
     };
 

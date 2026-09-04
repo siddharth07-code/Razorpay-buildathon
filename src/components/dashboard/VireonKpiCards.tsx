@@ -23,17 +23,17 @@ export function VireonKpiCards({ metrics }: { metrics: VireonKpiMetrics }) {
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
       {/* 1. REVENUE AT RISK */}
-      <div className="bg-[#080D15] border border-[#151E2E] hover:border-amber-500/30 transition-all rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+      <div className="bg-[#080D15] border border-[#151E2E] hover:border-amber-500/40 hover:shadow-[0_8px_24px_rgba(245,158,11,0.08)] transition-all duration-300 hover:-translate-y-0.5 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group">
         <div className="space-y-1 z-10">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             <span>REVENUE AT RISK</span>
-            <Info className="w-3 h-3 text-slate-400 hover:text-slate-200 cursor-pointer" />
+            <Info className="w-3 h-3 text-slate-400 group-hover:text-amber-400 transition-colors group-hover:translate-x-0.5 cursor-pointer" />
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight pt-0.5">
             {formatINR(atRisk)}
           </div>
           <div className="flex items-center gap-1 text-[11px] font-medium text-amber-400 pt-1">
-            <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
+            <TrendingUp className="w-3.5 h-3.5 text-amber-400 transition-transform duration-200 group-hover:translate-y-[-1px]" />
             <span>8.4%</span>
             <span className="text-slate-400 font-normal ml-0.5">vs last 30 days</span>
           </div>
@@ -65,11 +65,11 @@ export function VireonKpiCards({ metrics }: { metrics: VireonKpiMetrics }) {
       </div>
 
       {/* 2. RECOVERABLE PIPELINE */}
-      <div className="bg-[#080D15] border border-[#151E2E] hover:border-cyan-500/30 transition-all rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+      <div className="bg-[#080D15] border border-[#151E2E] hover:border-cyan-500/40 hover:shadow-[0_8px_24px_rgba(34,211,238,0.08)] transition-all duration-300 hover:-translate-y-0.5 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group">
         <div className="space-y-1 z-10">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             <span>RECOVERABLE PIPELINE</span>
-            <Info className="w-3 h-3 text-slate-400 hover:text-slate-200 cursor-pointer" />
+            <Info className="w-3 h-3 text-slate-400 group-hover:text-cyan-400 transition-colors group-hover:translate-x-0.5 cursor-pointer" />
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight pt-0.5">
             {formatINR(recoverable)}
@@ -106,17 +106,17 @@ export function VireonKpiCards({ metrics }: { metrics: VireonKpiMetrics }) {
       </div>
 
       {/* 3. REVENUE RECOVERED */}
-      <div className="bg-[#080D15] border border-[#151E2E] hover:border-emerald-500/30 transition-all rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+      <div className="bg-[#080D15] border border-[#151E2E] hover:border-emerald-500/40 hover:shadow-[0_8px_24px_rgba(16,185,129,0.08)] transition-all duration-300 hover:-translate-y-0.5 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group">
         <div className="space-y-1 z-10">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             <span>REVENUE RECOVERED</span>
-            <Info className="w-3 h-3 text-slate-400 hover:text-slate-200 cursor-pointer" />
+            <Info className="w-3 h-3 text-slate-400 group-hover:text-emerald-400 transition-colors group-hover:translate-x-0.5 cursor-pointer" />
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight pt-0.5">
             {formatINR(recovered)}
           </div>
           <div className="flex items-center gap-1 text-[11px] font-medium text-emerald-400 pt-1">
-            <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+            <TrendingUp className="w-3.5 h-3.5 text-emerald-400 transition-transform duration-200 group-hover:translate-y-[-1px]" />
             <span>18.7%</span>
             <span className="text-slate-400 font-normal ml-0.5">vs last 30 days</span>
           </div>
@@ -148,17 +148,17 @@ export function VireonKpiCards({ metrics }: { metrics: VireonKpiMetrics }) {
       </div>
 
       {/* 4. RECOVERY RATE */}
-      <div className="bg-[#080D15] border border-[#151E2E] hover:border-violet-500/30 transition-all rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group">
+      <div className="bg-[#080D15] border border-[#151E2E] hover:border-violet-500/40 hover:shadow-[0_8px_24px_rgba(139,92,246,0.08)] transition-all duration-300 hover:-translate-y-0.5 rounded-2xl p-4 sm:p-5 flex flex-col justify-between shadow-sm relative overflow-hidden group">
         <div className="space-y-1 z-10">
           <div className="flex items-center gap-1.5 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
             <span>RECOVERY RATE</span>
-            <Info className="w-3 h-3 text-slate-400 hover:text-slate-200 cursor-pointer" />
+            <Info className="w-3 h-3 text-slate-400 group-hover:text-violet-400 transition-colors group-hover:translate-x-0.5 cursor-pointer" />
           </div>
           <div className="text-2xl sm:text-3xl font-extrabold text-white font-mono tracking-tight pt-0.5">
             {rate}%
           </div>
           <div className="flex items-center gap-1 text-[11px] font-medium text-violet-400 pt-1">
-            <TrendingUp className="w-3.5 h-3.5 text-violet-400" />
+            <TrendingUp className="w-3.5 h-3.5 text-violet-400 transition-transform duration-200 group-hover:translate-y-[-1px]" />
             <span>6.1%</span>
             <span className="text-slate-400 font-normal ml-0.5">vs last 30 days</span>
           </div>

@@ -22,7 +22,6 @@ import {
   Terminal,
   RefreshCw,
   Eye,
-  Network,
   SlidersHorizontal,
   XCircle,
   TrendingUp,
@@ -522,13 +521,6 @@ export default function OperationsConsolePage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/operations/graph"
-            className="flex items-center gap-1.5 bg-purple-950/40 hover:bg-purple-900/40 text-purple-300 text-xs font-semibold px-3 py-1.5 rounded border border-purple-500/40 transition"
-          >
-            <Network className="w-3 h-3 text-purple-400" />
-            <span>LangGraph Topology</span>
-          </Link>
           {activeCase && (
             <button
               onClick={openTimeline}

@@ -13,6 +13,7 @@ import {
   Activity,
   Zap,
   RotateCcw,
+  Menu,
 } from "lucide-react";
 
 export function Header({
@@ -89,26 +90,35 @@ export function Header({
 
   return (
     <>
-      <header className="h-14 bg-[#05080D]/90 backdrop-blur-md border-b border-[#151E2E] px-4 sm:px-6 flex items-center justify-between sticky top-0 z-30">
-        {/* Left: Global Search Input matching Reference Image */}
-        <div className="flex items-center gap-3 flex-1 max-w-md">
+      <header className="h-14 bg-[#05080D]/95 backdrop-blur-md border-b border-[#151E2E] px-3 sm:px-6 flex items-center justify-between sticky top-0 z-30 transition-all">
+        {/* Left: Mobile Hamburger + Global Search */}
+        <div className="flex items-center gap-2 sm:gap-3 flex-1 max-w-md">
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent("vireon:toggle-sidebar"))}
+            className="lg:hidden p-1.5 text-slate-400 hover:text-white hover:bg-[#151E2E] rounded-lg transition-colors flex items-center justify-center shrink-0"
+            aria-label="Toggle navigation menu"
+          >
+            <Menu className="w-5 h-5 text-slate-300" />
+          </button>
+
           <div className="relative w-full">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search cases, customers, IDs..."
-              className="w-full bg-[#080D15] border border-[#1A2333] hover:border-slate-700 focus:border-cyan-500/50 rounded-lg pl-8 pr-12 py-1.5 text-xs text-white placeholder-slate-400 focus:outline-none transition-all"
+              placeholder="Search cases, customers..."
+              className="w-full bg-[#080D15] border border-[#1A2333] hover:border-slate-700 focus:border-cyan-500/50 rounded-lg pl-8 pr-8 sm:pr-12 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-all"
             />
-            <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-mono text-slate-400 bg-[#0F1622] px-1.5 py-0.5 rounded border border-[#1E293B]">
+            <kbd className="hidden sm:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-mono text-slate-400 bg-[#0F1622] px-1.5 py-0.5 rounded border border-[#1E293B]">
               ⌘K
             </kbd>
           </div>
         </div>
 
-        {/* Right: Date Range Dropdown + Refresh + System Status */}
-        <div className="flex items-center gap-2.5 sm:gap-3">
+        {/* Right: Date Range Dropdown + Reset + Refresh + System Status */}
+        <div className="flex items-center gap-1.5 sm:gap-3">
           {/* Date Filter */}
-          <div className="flex items-center gap-1.5 bg-[#080D15] border border-[#1A2333] hover:border-slate-700 text-slate-300 text-xs px-2.5 py-1.5 rounded-lg transition cursor-pointer select-none">
+          <div className="hidden md:flex items-center gap-1.5 bg-[#080D15] border border-[#1A2333] hover:border-slate-700 text-slate-300 text-xs px-2.5 py-1.5 rounded-lg transition cursor-pointer select-none">
             <Calendar className="w-3.5 h-3.5 text-slate-400" />
             <span className="font-medium text-[11px]">{dateRange}</span>
             <ChevronDown className="w-3 h-3 text-slate-400 ml-0.5" />
@@ -118,9 +128,9 @@ export function Header({
           <button
             onClick={() => setShowResetModal(true)}
             title="Reset Demo Case"
-            className="flex items-center gap-1.5 bg-[#080D15] border border-[#1A2333] hover:border-slate-700 hover:text-white text-slate-300 text-xs px-2.5 py-1.5 rounded-lg transition"
+            className="flex items-center gap-1.5 bg-[#080D15] border border-[#1A2333] hover:border-slate-700 hover:text-white text-slate-300 text-xs px-2 sm:px-2.5 py-1.5 rounded-lg transition active:scale-95"
           >
-            <RotateCcw className="w-3 h-3 text-slate-400" />
+            <RotateCcw className="w-3.5 h-3.5 text-slate-400 hover:text-cyan-400 transition-colors" />
             <span className="text-[11px] font-medium hidden sm:inline">Reset Demo</span>
           </button>
 
@@ -128,19 +138,20 @@ export function Header({
           <button
             onClick={onRefresh}
             title="Refresh Data"
-            className="w-7 h-7 flex items-center justify-center bg-[#080D15] border border-[#1A2333] hover:border-slate-700 hover:text-white text-slate-400 rounded-lg transition"
+            className="w-8 h-8 flex items-center justify-center bg-[#080D15] border border-[#1A2333] hover:border-slate-700 hover:text-white text-slate-400 rounded-lg transition active:scale-95"
           >
-            <RefreshCw className="w-3 h-3" />
+            <RefreshCw className="w-3.5 h-3.5" />
           </button>
 
           {/* System Status Dropdown Pill */}
           <div className="relative">
             <button
               onClick={() => setShowStatusPopover(!showStatusPopover)}
-              className="flex items-center gap-1.5 bg-[#080D15] border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition"
+              className="flex items-center gap-1.5 bg-[#080D15] border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400 px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              <span>SYSTEM OPERATIONAL</span>
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse status-dot-active" />
+              <span className="hidden sm:inline">SYSTEM OPERATIONAL</span>
+              <span className="sm:hidden text-[10px]">LIVE</span>
               <ChevronDown className="w-3 h-3 ml-0.5 opacity-70" />
             </button>
 

@@ -5,7 +5,7 @@ import { checkDatabaseConnection } from "./config/prisma";
 const PORT = config.port || 5001;
 
 async function startServer() {
-  console.log(`[RecoverAI] Initializing Express backend on port ${PORT}...`);
+  console.log(`[VIREON] Initializing Express backend on port ${PORT}...`);
 
   // Check database connection
   const dbStatus = await checkDatabaseConnection();
@@ -17,14 +17,14 @@ async function startServer() {
   }
 
   const server = app.listen(PORT, () => {
-    console.log(`[RecoverAI Server] ✓ Running at http://localhost:${PORT}`);
-    console.log(`[RecoverAI API] Health check: http://localhost:${PORT}/api/health`);
-    console.log(`[RecoverAI API] Dashboard summary: http://localhost:${PORT}/api/dashboard/summary`);
+    console.log(`[VIREON Server] ✓ Running at http://localhost:${PORT}`);
+    console.log(`[VIREON API] Health check: http://localhost:${PORT}/api/health`);
+    console.log(`[VIREON API] Dashboard summary: http://localhost:${PORT}/api/dashboard/summary`);
   });
 
   // Graceful shutdown
   process.on("SIGTERM", () => {
-    console.log("[RecoverAI Server] SIGTERM received. Gracefully closing...");
+    console.log("[VIREON Server] SIGTERM received. Gracefully closing...");
     server.close(() => process.exit(0));
   });
 

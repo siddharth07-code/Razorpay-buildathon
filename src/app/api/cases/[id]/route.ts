@@ -191,6 +191,7 @@ export async function POST(
         }
       }
 
+      // Human Approval Gate Check
       if (dbCase.status === "AWAITING_APPROVAL" || dbCase.status === "PENDING_APPROVAL") {
         if (action === "ANALYZE" || action === "MARK_RESOLVED") {
           return NextResponse.json(serializeBigInt({
@@ -198,6 +199,72 @@ export async function POST(
             status: dbCase.status,
             message: "Case is awaiting human approval and cannot perform this action.",
           }), { status: 409 });
+        }
+
+        // Explicit Human Approval
+        if (action === "APPROVE" || action === "APPROVE_ACTION" || action === "APPROVE_RECOVERY" || action === "CONTINUE_RECOVERY") {
+          try {
+            await prisma.humanApproval.create({
+              data: {
+                recoveryCaseId: caseId,
+                requestedAction: (dbCase.selectedAction || dbCase.recommendedAction || "CREATE_PAYMENT_LINK") as any,
+                status: "APPROVED",
+                approvedBy: body.operator || "Operations Manager",
+                reason: body.reason || "Manual sign-off granted via dashboard",
+              },
+            });
+          } catch (approvalErr) {
+            console.warn("[HumanApproval Record Error]:", approvalErr);
+          }
+
+          await prisma.recoveryCase.update({
+            where: { id: caseId },
+            data: { requiresHumanApproval: false },
+          });
+
+          // Once explicitly approved by human, execute the action
+          const result = await recoveryOrchestrator.executeRecoveryAction(caseId, { forceExecute: true });
+          const updated = await prisma.recoveryCase.findUnique({
+            where: { id: caseId },
+            include: { customer: true, payment: true },
+          });
+          return NextResponse.json(serializeBigInt({
+            success: true,
+            approved: true,
+            case: updated,
+            result,
+            message: "Human sign-off recorded. Recovery action dispatched.",
+          }));
+        }
+
+        // Explicit Human Rejection
+        if (action === "REJECT" || action === "REJECT_ACTION" || action === "STOP_RECOVERY") {
+          try {
+            await prisma.humanApproval.create({
+              data: {
+                recoveryCaseId: caseId,
+                requestedAction: (dbCase.selectedAction || dbCase.recommendedAction || "CREATE_PAYMENT_LINK") as any,
+                status: "REJECTED",
+                approvedBy: body.operator || "Operations Manager",
+                reason: body.reason || "Rejected by operator in approval gate",
+              },
+            });
+          } catch (approvalErr) {
+            console.warn("[HumanApproval Record Error]:", approvalErr);
+          }
+
+          const result = await recoveryOrchestrator.stopRecovery(caseId, body.reason || "Rejected in human approval gate");
+          const updated = await prisma.recoveryCase.findUnique({
+            where: { id: caseId },
+            include: { customer: true, payment: true },
+          });
+          return NextResponse.json(serializeBigInt({
+            success: true,
+            rejected: true,
+            case: updated,
+            result,
+            message: "Recovery rejected by human supervisor and halted.",
+          }));
         }
       }
 
@@ -217,8 +284,30 @@ export async function POST(
       }
 
       if (action === "EXECUTE_ACTION" || action === "SEND_PAYMENT_LINK" || action === "TRIGGER_RETRY" || action === "CONTINUE_RECOVERY") {
-        const result = await recoveryOrchestrator.executeRecoveryAction(caseId, { forceExecute: true });
-        return NextResponse.json(serializeBigInt({ success: true, result, message: result.message }));
+        // Enforce policy evaluation strictly on server - do NOT pass forceExecute
+        const result = await recoveryOrchestrator.executeRecoveryAction(caseId);
+        const updated = await prisma.recoveryCase.findUnique({
+          where: { id: caseId },
+          include: { customer: true, payment: true },
+        });
+
+        if (!result.success && result.status === "BLOCKED_BY_POLICY") {
+          return NextResponse.json(serializeBigInt({
+            success: false,
+            requiresApproval: true,
+            status: updated?.status || "AWAITING_APPROVAL",
+            case: updated,
+            result,
+            message: result.message || "Intervention requires human approval before execution.",
+          }));
+        }
+
+        return NextResponse.json(serializeBigInt({
+          success: true,
+          case: updated,
+          result,
+          message: result.message || "Recovery action executed.",
+        }));
       }
 
       if (action === "MARK_RESOLVED") {

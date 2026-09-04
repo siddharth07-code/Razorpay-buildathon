@@ -234,13 +234,17 @@ export function LiveRecoveryDemoModal({
         },
       };
 
-      const res = await fetch("/api/webhooks/razorpay", {
+      const res = await fetch("/api/demo/recovery/simulate-webhook", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-razorpay-signature": "mock_signature_test",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          caseId: demoData.caseId,
+          caseNumber: demoData.caseNumber || "REC-DEMO-005",
+          paymentId,
+          amountPaise,
+        }),
       });
 
       if (!res.ok) {

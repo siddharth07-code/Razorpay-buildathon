@@ -701,11 +701,11 @@ export function getInitialSeedData(): SeedData {
       entityId: "system_init",
       eventType: "SANDBOX_ENVIRONMENT_BOOTSTRAPPED",
       actor: "SYSTEM",
-      description: "RecoverAI Razorpay Demo Environment initialized with Indian merchant datasets.",
+      description: "VIREON Razorpay Demo Environment initialized with Indian merchant datasets.",
       payload: {
         mode: "sandbox",
         currency: "INR",
-        merchant: "SaaSify Technologies India",
+        merchant: "VIREON Technologies India",
       },
       timestamp: threeDaysAgo,
     },
