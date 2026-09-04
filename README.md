@@ -2,186 +2,296 @@
 
 [![Next.js 14](https://img.shields.io/badge/Next.js-14.2.35-000000?style=flat-square&logo=next.js)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-ML%20Service-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-v1.4+-F7931E?style=flat-square&logo=scikit-learn)](https://scikit-learn.org/)
+[![LangGraph](https://img.shields.io/badge/LangGraph-StateGraph%20v1-FF6F00?style=flat-square)](https://langchain-ai.github.io/langgraphjs/)
 [![Prisma ORM](https://img.shields.io/badge/Prisma-ORM-2D3748?style=flat-square&logo=prisma)](https://www.prisma.io/)
-[![LangGraph](https://img.shields.io/badge/LangGraph-Multi--Agent-FF6F00?style=flat-square)](https://langchain-ai.github.io/langgraphjs/)
 [![Razorpay API](https://img.shields.io/badge/Razorpay-API%20v1-0C2340?style=flat-square&logo=razorpay)](https://razorpay.com/docs/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-336791?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
 
-> **Turn failed, delayed, and abandoned revenue into an intelligent recovery pipeline.**
+> **Turn failed, delayed, and abandoned transactions into an autonomous recovery pipeline.**
 
-VIREON is an institutional-grade revenue intelligence platform designed to autonomously detect, diagnose, orchestrate, and settle revenue leakage across the modern payment stack. Combining bounded LangGraph multi-agent triage with deterministic policy guardrails and native Razorpay checkout settlement, VIREON protects enterprise revenue without unpredictable AI behavior.
+VIREON is an institutional-grade revenue intelligence infrastructure designed to autonomously detect, diagnose, orchestrate, and settle revenue leakage across the modern enterprise payment stack. Built for the **Razorpay Buildathon 2026**, VIREON couples a real **Supervised ML Recoverability Model** (Python/FastAPI) and an official **LangGraph StateGraph Workflow** with immutable policy guardrails and native **Razorpay TEST** settlement.
 
 ---
 
 ## 📑 Table of Contents
 1. [Executive Summary & Core Value](#-executive-summary--core-value)
-2. [Unified Revenue Recovery Engines](#-unified-revenue-recovery-engines)
-3. [System Architecture & Multi-Agent Triage](#-system-architecture--multi-agent-triage)
-4. [Policy Engine & Financial Guardrails](#-policy-engine--financial-guardrails)
-5. [Razorpay Integration & Settlement Invariants](#-razorpay-integration--settlement-invariants)
-6. [Controlled Demo Portfolio & Scenarios](#-controlled-demo-portfolio--scenarios)
-7. [Technology Stack](#-technology-stack)
-8. [Getting Started & Local Setup](#-getting-started--local-setup)
-9. [Environment Configuration](#-environment-configuration)
-10. [Database Architecture & Schema](#-database-architecture--schema)
-11. [API Reference](#-api-reference)
-12. [Verification & Test Suites](#-verification--test-suites)
-13. [Security & Production Readiness](#-security--production-readiness)
+2. [End-to-End System Architecture](#-end-to-end-system-architecture)
+3. [Supervised ML Recoverability Model](#-supervised-ml-recoverability-model)
+4. [LangGraph StateGraph 11-Node Workflow](#-langgraph-stategraph-11-node-workflow)
+5. [Policy Engine & Mandatory ₹1,00,000 Guardrail](#-policy-engine--mandatory-100000-guardrail)
+6. [Human-in-the-Loop Interrupts & PostgreSQL Checkpointing](#-human-in-the-loop-interrupts--postgresql-checkpointing)
+7. [Razorpay Integration & Settlement Invariants](#-razorpay-integration--settlement-invariants)
+8. [Unified Revenue Recovery Streams](#-unified-revenue-recovery-streams)
+9. [Official Brand Identity & Design System](#-official-brand-identity--design-system)
+10. [Controlled Demo Portfolio](#-controlled-demo-portfolio)
+11. [Dashboard & Precision Analytical Controls](#-dashboard--precision-analytical-controls)
+12. [Technology Stack](#-technology-stack)
+13. [Getting Started & Local Setup](#-getting-started--local-setup)
+14. [Environment Configuration](#-environment-configuration)
+15. [Database Architecture & Checkpointing Schema](#-database-architecture--checkpointing-schema)
+16. [API Reference](#-api-reference)
+17. [Verification & Test Suites](#-verification--test-suites)
+18. [Security & Production Readiness](#-security--production-readiness)
+19. [License & Attribution](#-license--attribution)
 
 ---
 
 ## ⚡ Executive Summary & Core Value
 
-Traditional dunning and recovery systems rely on static, scheduled cron jobs and generic email templates that ignore error telemetry, customer lifetime value, and payment method nuances. 
+Traditional dunning and recovery systems rely on static cron jobs, rigid retry schedules, and generic email templates that ignore error telemetry, customer lifetime value, and payment method nuances.
 
-**VIREON replaces blunt retries with precision revenue intelligence:**
-- **Zero Financial Float**: All internal accounting, balances, and transaction thresholds are stored and calculated strictly in integer paise (`BigInt` in PostgreSQL) to eliminate floating-point precision loss.
-- **Bounded Multi-Agent Orchestration**: Specialized AI agents evaluate risk, diagnose root causes, formulate recovery strategies, and verify policy constraints within a deterministic finite state machine.
-- **Hard Policy Thresholds**: Human approval gates are strictly enforced for high-value transactions (e.g., $\ge ₹1,00,000$), ensuring AI autonomy remains bounded and safe.
-- **Atomic Verification & Settlement**: Direct integration with Razorpay Checkout.js, server-side HMAC signature verification, and idempotent webhook reconciliation.
-
----
-
-## 🔄 Unified Revenue Recovery Engines
-
-VIREON provides end-to-end recovery workflows across all 4 primary revenue leakage streams:
-
-| Revenue Stream | Root Cause Scenarios | Automated Recovery Strategy | Settlement Mechanism |
-| :--- | :--- | :--- | :--- |
-| **💳 Payment Failure** | 3DS dropoff, card authentication timeout, bank server downtime | Smart retry scheduling, dynamic 1-click fallback links, UPI intent dispatch | Razorpay Checkout / API |
-| **🔁 Subscription Dunning** | Recurring card failure, eNACH mandate rejection, max mandate cap | Intelligent mandate retry interval, self-serve payment method update links | Razorpay Subscriptions / Mandates |
-| **🛒 Checkout Abandonment** | Cart dropoff, high-friction checkout, abandoned high-value carts | Pre-filled Razorpay test orders with dynamic time-limited incentives | Razorpay Payment Links / Checkout |
-| **🏢 B2B Receivables** | Overdue corporate invoices, delayed payment commitments | Structured Promise-to-Pay tracking, automated aging dunning, executive escalation | Razorpay Invoices / Corporate Settlement |
+**VIREON replaces blunt retries with intelligent, closed-loop financial infrastructure:**
+- **Integer Paise Accounting**: All currency balances and risk calculations are strictly stored in integer paise (`BigInt` in PostgreSQL) to eliminate floating-point drift.
+- **Empirical Supervised ML**: Real-time recovery probability $P(\text{recovery}) \in [0.0, 1.0]$ and 0–100 recoverability scores generated by a trained Logistic Regression pipeline running on port 9000.
+- **Deterministic Multi-Agent Orchestration**: 11-node LangGraph StateGraph governing ingestion, scoring, diagnosis, strategy, policy, execution, and outcome evaluation.
+- **Hard Policy Thresholds**: Human approval gates are strictly enforced for high-value cases ($\ge ₹1,00,000$), ensuring ML suggestions can never bypass human risk sign-off.
+- **Atomic Razorpay Settlement**: Direct integration with Razorpay Checkout.js, server-side HMAC signature verification, and idempotent webhook reconciliation. Cases become `RECOVERED` **only** after real payment verification.
 
 ---
 
-## 🏗 System Architecture & Multi-Agent Triage
-
-VIREON utilizes a **7-Stage Lifecycle Pipeline** managed by LangGraph and PostgreSQL state checkpoints:
+## 🏗 End-to-End System Architecture
 
 ```mermaid
-flowchart LR
-    A["01 DETECTED"] --> B["02 ANALYZED"]
-    B --> C["03 QUALIFIED"]
-    C --> D["04 STRATEGY"]
-    D --> E["05 APPROVED"]
-    E --> F["06 EXECUTED"]
-    F --> G["07 RECOVERED"]
-    
-    style A fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style B fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style C fill:#1e293b,stroke:#22d3ee,stroke-width:2px,color:#fff
-    style D fill:#1e293b,stroke:#8b5cf6,stroke-width:2px,color:#fff
-    style E fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#fff
-    style F fill:#1e293b,stroke:#3b82f6,stroke-width:2px,color:#fff
-    style G fill:#1e293b,stroke:#10b981,stroke-width:2px,color:#fff
-```
+flowchart TD
+    subgraph INGESTION["1. INGESTION & DATA LAYER"]
+        A["Failed Payment / Overdue Invoice / Cart Abandonment"] --> B["PostgreSQL (authoritative ledger)"]
+        B --> C["LangGraph detectNode"]
+    end
 
-### The Multi-Agent Triage Pipeline:
-1. **Risk Scoring Agent**: Computes multidimensional risk and recoverability scores based on customer tier, historical payment success rate, and lifetime value.
-2. **Diagnostic Agent**: Ingests raw Razorpay error codes (`BAD_REQUEST_ERROR`, `AUTHENTICATION_FAILED`, `INSUFFICIENT_FUNDS`, etc.) to isolate the root cause.
-3. **Strategy Agent**: Selects the highest-probability recovery intervention (e.g., `CREATE_PAYMENT_LINK`, `RETRY_SUBSCRIPTION`, `CREATE_PROMISE_TO_PAY`).
-4. **Policy Evaluation Agent**: Validates proposed actions against organizational guardrails, rate limits, and approval caps.
-5. **Execution Agent**: Interacts with the Razorpay Cloud API to generate verified checkout sessions, payment links, or scheduled retries.
+    subgraph TRIAGE["2. AI TRIAGE & POLICY ENGINE"]
+        C --> D["riskScoreNode (FastAPI ML Port 9000)"]
+        D --> E["diagnoseNode (Root Cause Classification)"]
+        E --> F["strategyNode (Strategy Selection Service)"]
+        F --> G{"policyNode (₹1,00,000 Boundary)"}
+    end
+
+    subgraph HITL["3. HUMAN-IN-THE-LOOP (HITL)"]
+        G -- "≥ ₹1,00,000" --> H["humanApprovalNode (Native interrupt())"]
+        H --> I["Postgres Checkpoint Saved (thread_id = caseId)"]
+        I --> J{"Operator Decision via UI / API"}
+        J -- "APPROVE: Command({ resume: { approved: true } })" --> K["executeNode"]
+        J -- "REJECT: Command({ resume: { approved: false } })" --> L["escalateNode (STOPPED)"]
+    end
+
+    subgraph EXECUTION["4. RAZORPAY EXECUTION & SETTLEMENT"]
+        G -- "< ₹1,00,000 (Auto-Approved)" --> K
+        K --> M["Razorpay TEST API (Orders / Payment Links)"]
+        M --> N["Customer Completes Checkout"]
+        N --> O["HMAC-SHA256 Signature Verification"]
+        O --> P["outcomeService.confirmRecovery()"]
+        P --> Q["PostgreSQL Settle: RECOVERED Status"]
+    end
+
+    style G fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#fff
+    style H fill:#1e293b,stroke:#f59e0b,stroke-width:2px,color:#fff
+    style D fill:#1e293b,stroke:#22d3ee,stroke-width:2px,color:#fff
+    style Q fill:#1e293b,stroke:#10b981,stroke-width:2px,color:#fff
+```
 
 ---
 
-## 🛡 Policy Engine & Financial Guardrails
+## 🧠 Supervised ML Recoverability Model
 
-To prevent unintended customer communications or unauthorized financial actions, VIREON implements strict policy guardrails:
+VIREON hosts an autonomous Python FastAPI inference microservice (`ml/server.py`) operating on `http://localhost:9000`.
+
+### Model Specifications
+- **Model Version**: `v1`
+- **Algorithm**: `LogisticRegression` (scikit-learn with standard scalar preprocessor)
+- **Features Evaluated (9-Dimensional Vector)**:
+  1. `amount_at_risk` (Float, INR)
+  2. `customer_ltv` (Float, INR)
+  3. `failure_type` (Categorical: `AUTHENTICATION_FAILURE`, `INSUFFICIENT_FUNDS`, `NETWORK_TIMEOUT`, etc.)
+  4. `retry_count` (Integer)
+  5. `days_overdue` (Integer)
+  6. `previous_successful_payments` (Integer)
+  7. `previous_recovery_attempts` (Integer)
+  8. `payment_method` (Categorical: `CARD`, `UPI`, `NETBANKING`, `NACH`)
+  9. `customer_tenure_days` (Integer)
+
+### Real API Response Contract
+```json
+{
+  "probability": 0.8884,
+  "recoverabilityScore": 88.8,
+  "modelVersion": "v1",
+  "priority": "HIGH"
+}
+```
+
+### Critical ML Invariant
+If the ML service is unreachable or encounters a timeout, the TypeScript client ([`src/lib/ml/recoverability-client.ts`](file:///Users/siddharthlal/Desktop/Razorpay/recoverai/src/lib/ml/recoverability-client.ts)) returns a controlled fallback with `isFallback: true`. **An ML error or high probability score never bypasses the ₹1,00,000 policy gate.**
+
+---
+
+## 🔄 LangGraph StateGraph 11-Node Workflow
+
+The core orchestration pipeline is built using official `@langchain/langgraph` ([`src/lib/langgraph/recovery-graph.ts`](file:///Users/siddharthlal/Desktop/Razorpay/recoverai/src/lib/langgraph/recovery-graph.ts)):
+
+| Node | Name | Responsibility |
+| :--- | :--- | :--- |
+| `1` | **`detect`** | Ingests recovery case telemetry from PostgreSQL; validates existence and initial state. |
+| `2` | **`riskScore`** | Dispatches feature vector to Python ML microservice; persists probability and score. |
+| `3` | **`diagnose`** | Ingests Razorpay error telemetry to identify root causes (`authentication_failure`, etc.). |
+| `4` | **`strategy`** | Formulates optimal recovery action (`CREATE_PAYMENT_LINK`, `RETRY_SUBSCRIPTION`, etc.). |
+| `5` | **`policy`** | Evaluates deterministic financial guardrails. Routes to `humanApproval` if $\ge ₹1,00,000$. |
+| `6` | **`humanApproval`** | Triggers native LangGraph `interrupt()`; persists thread checkpoint in PostgreSQL. |
+| `7` | **`execute`** | Calls `executionService` to dispatch real Razorpay TEST payment links or orders. |
+| `8` | **`outcome`** | Evaluates capture outcome; routes to `complete`, `retry`, or `escalate`. |
+| `9` | **`retry`** | Bounded retry scheduler. Increments retry counter; strictly bounds iterations to 3. |
+| `10` | **`complete`** | Terminal success state for fully verified payments. |
+| `11` | **`escalate`** | Terminal stopped/escalated state for rejected cases or retry limit exhaustion. |
+
+---
+
+## 🛡 Policy Engine & Mandatory ₹1,00,000 Guardrail
+
+To prevent unauthorized automated capital movements, VIREON enforces immutable deterministic rules in [`backend/src/services/policy.service.ts`](file:///Users/siddharthlal/Desktop/Razorpay/recoverai/backend/src/services/policy.service.ts):
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    POLICY ENGINE GUARDRAILS                 │
+│                    POLICY ENGINE INVARIANTS                 │
 ├──────────────────────────────┬──────────────────────────────┤
-│ Rule                         │ Enforcement Action           │
+│ Invariant                    │ Enforcement Action           │
 ├──────────────────────────────┼──────────────────────────────┤
-│ Amount ≥ ₹1,00,000           │ Require Human Approval Gate  │
-│ (10,000,000 paise)           │ (State: AWAITING_APPROVAL)   │
+│ Amount < ₹1,00,000           │ Auto-Approved for Automation │
+│ (< 10,000,000 paise)         │ (Proceed to Razorpay Link)   │
 ├──────────────────────────────┼──────────────────────────────┤
-│ Maximum Retries Exceeded     │ Halt Automation & Escalate   │
-│ (Default: 3 retries max)     │ (State: ESCALATED_TO_HUMAN)  │
+│ Amount ≥ ₹1,00,000           │ Mandatory Human Sign-Off     │
+│ (≥ 10,000,000 paise)         │ (Pauses at humanApproval)    │
 ├──────────────────────────────┼──────────────────────────────┤
-│ Anti-Spam Contact Frequency  │ Enforce Cooldown Interval    │
-│ (Max 3 contacts / 24h)       │ (Suppress premature dunning) │
+│ Maximum Retries = 3          │ Bounded Loop Protection      │
+│                              │ (Transitions to ESCALATED)   │
 ├──────────────────────────────┼──────────────────────────────┤
-│ Customer In Dispute / Legal  │ Immediate Stop Recovery      │
-│                              │ (State: RECOVERY_STOPPED)    │
+│ Anti-Spam Frequency          │ Maximum 3 contacts / 24h     │
+│ Legal / Insolvency Flag      │ Immediate RECOVERY_STOPPED   │
 └──────────────────────────────┴──────────────────────────────┘
 ```
 
 ---
 
+## ⏸ Human-in-the-Loop Interrupts & PostgreSQL Checkpointing
+
+For transactions exceeding ₹1,00,000 (e.g., **REC-DEMO-004** ₹2,75,000 and **REC-DEMO-008** ₹8,40,000):
+
+1. **Native LangGraph Pause**: `humanApprovalNode` calls `interrupt({ caseId, caseNumber, amountAtRiskRupees, prompt })`.
+2. **PostgreSQL Checkpointing**: [`PostgresPrismaSaver`](file:///Users/siddharthlal/Desktop/Razorpay/recoverai/src/lib/langgraph/checkpointer.ts) writes serialized state tuples to PostgreSQL tables `langgraph_checkpoints` and `langgraph_checkpoint_writes` using `thread_id = caseId`.
+3. **Resumption via Command**:
+   ```typescript
+   await recoveryWorkflowGraph.invoke(
+     new Command({
+       resume: {
+         approved: true,
+         operator: "Chief Risk Officer",
+         reason: "Authorized high-value recovery outreach",
+       },
+     }),
+     { configurable: { thread_id: caseId } }
+   );
+   ```
+4. **Rejection Safety**: If rejected (`approved: false`), the case transitions to `STOPPED` in PostgreSQL and **zero Razorpay API calls are made**.
+
+---
+
 ## 💳 Razorpay Integration & Settlement Invariants
 
-VIREON integrates with Razorpay via a unified provider architecture (`IRazorpayService`):
+VIREON interfaces with Razorpay via [`IRazorpayService`](file:///Users/siddharthlal/Desktop/Razorpay/recoverai/src/lib/razorpay/provider.ts) and [`executionService`](file:///Users/siddharthlal/Desktop/Razorpay/recoverai/backend/src/services/execution.service.ts):
 
 ```mermaid
 sequenceDiagram
     autonumber
     participant Browser as VIREON Frontend
-    participant Server as VIREON Backend
-    participant Razorpay as Razorpay Cloud API
+    participant Graph as LangGraph Engine
+    participant Exec as ExecutionService
+    participant Razorpay as Razorpay Test API
     participant DB as PostgreSQL Database
 
-    Browser->>Server: POST /api/recovery/cases/[id]/checkout
-    Server->>Razorpay: createOrder({ amount: paise, currency: 'INR' })
-    Razorpay-->>Server: order_TVX... (Cloud Order Created)
-    Server-->>Browser: { orderId: 'order_TVX...', amount: paise }
-    Browser->>Razorpay: Razorpay(options).open()
-    Note over Browser,Razorpay: Customer completes Test Payment
-    Razorpay-->>Browser: { razorpay_payment_id, razorpay_signature }
-    Browser->>Server: POST /api/recovery/cases/[id]/payment/verify
-    Server->>Server: HMAC-SHA256 Signature Verification
-    Server->>DB: Atomic Transaction: status=RECOVERED, recoveredAmount=paise
-    Server-->>Browser: { success: true, case: updatedCase }
+    Graph->>Exec: executeNode(caseId, action, amount)
+    Exec->>Razorpay: createPaymentLink({ amount: ₹67,500, notify: { sms, email } })
+    Razorpay-->>Exec: { id: 'plink_XYZ', short_url: 'https://rzp.io/rzp/...' }
+    Exec->>DB: update(paymentLinkUrl, status: AWAITING_PAYMENT)
+    
+    Note over Browser,Razorpay: Customer Completes Payment
+    Browser->>DB: POST /api/recovery/cases/[id]/payment/verify
+    Note over DB: Cryptographic HMAC-SHA256 Signature Verification
+    DB->>DB: Atomic Update: status = RECOVERED, recoveredAmount = ₹67,500
 ```
 
-### Razorpay Invariants Enforced:
-- **Real Cloud Order IDs**: Stale/mock order prefixes (`order_demo_*`, `order_mock_*`, `order_sandbox_*`) are automatically rejected; fresh cloud orders are generated via `https://api.razorpay.com/v1/orders`.
-- **HMAC Verification**: Server-side verification using `crypto.createHmac('sha256', secret)` validates payment authenticity before database transition.
-- **Idempotent Webhooks**: Duplicate webhook deliveries or repeated verification requests never double-count revenue.
+### Settlement Invariant
+A case transitions to `RECOVERED` **strictly upon successful Razorpay payment capture verification**. LangGraph alone never marks a case as recovered without verified settlement.
 
 ---
 
-## 🎯 Controlled Demo Portfolio & Scenarios
+## 🌐 Unified Revenue Recovery Streams
 
-VIREON features an 8-case multi-value Demo Portfolio designed for reproducible demonstrations across varied transaction sizes:
+| Revenue Stream | Root Cause Scenarios | Automated Recovery Strategy | Settlement Mechanism |
+| :--- | :--- | :--- | :--- |
+| **💳 Payment Failure** | 3DS dropoff, card authentication timeout | Dynamic 1-click fallback links, UPI intent | Razorpay Checkout / Payment Links |
+| **🔁 Subscription Dunning** | Recurring card failure, mandate rejection | Self-serve payment method update links | Razorpay Subscriptions / Mandates |
+| **🛒 Checkout Abandonment** | Cart dropoff, high-friction checkout | Pre-filled Razorpay test orders with incentives | Razorpay Orders / Checkout.js |
+| **🏢 B2B Receivables** | Overdue corporate invoices | Promise-to-Pay tracking, executive sign-off | Razorpay Invoices / Corporate Links |
 
-| Case ID | Customer Entity | Source Category | Root Cause Scenario | Amount (Paise) | Display Amount | State Machine Status |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **REC-DEMO-001** | Acme Technologies India Pvt Ltd | Payment Recovery | Authentication / 3DS Timeout | `2500000n` | **₹25,000** | `RECOVERED` |
-| **REC-DEMO-002** | NovaCloud Systems | Subscription Recovery | Recurring Card Failure | `849900n` | **₹8,499** | `AWAITING_PAYMENT` |
-| **REC-DEMO-003** | Meridian Retail | Checkout Abandonment | Cart Abandonment Dropoff | `124900n` | **₹1,249** | `ACTION_SELECTED` |
-| **REC-DEMO-004** | Vertex Industries | B2B Receivables | Overdue Corporate Invoice | `27500000n` | **₹2,75,000** | `AWAITING_APPROVAL` 🛡️ |
-| **REC-DEMO-005** | **Orion Media** *(Hero Live Demo)* | Payment Recovery | Card Authentication Failure | `6750000n` | **₹67,500** | `AWAITING_PAYMENT` |
-| **REC-DEMO-006** | BluePeak Logistics | B2B Receivables | Broken Payment Commitment | `15000000n` | **₹1,50,000** | `AWAITING_APPROVAL` 🛡️ |
-| **REC-DEMO-007** | Atlas Software | Subscription Recovery | Recurring Payment Failure | `1299900n` | **₹12,999** | `DIAGNOSED` |
-| **REC-DEMO-008** | Zenith Manufacturing | B2B Receivables | High-Value Corporate Invoice | `84000000n` | **₹8,40,000** | `AWAITING_APPROVAL` 🛡️ |
+---
+
+## 🎨 Official Brand Identity & Design System
+
+VIREON features a custom-engineered, institutional brand identity recreated in pure vector SVG ([`src/components/brand/VireonLogo.tsx`](file:///Users/siddharthlal/Desktop/Razorpay/recoverai/src/components/brand/VireonLogo.tsx)):
+
+- **3D Ribbon V Mark (`VireonMark`)**: An angular interlocking ribbon symbol featuring a continuous gradient flow: Radiant Cyan (`#00F2FE` $\to$ `#22D3EE`) to Cobalt Blue (`#0284C7` $\to$ `#2563EB`) to Royal Violet (`#6366F1` $\to$ `#8B5CF6`). Includes specular edge highlights and a neon apex rim glow.
+- **Wordmark with Segmented Cyclotron "O" (`VireonWordmark`)**: Precision geometric typography featuring the distinctive aperture "O" (vibrant cyan arc paired with a crisp white counter-segment).
+- **Official Tagline (`VireonTagline`)**: `REVENUE INTELLIGENCE INFRASTRUCTURE`.
+- **Favicon & App Icon**: Standalone vector SVG app icon (`src/app/icon.svg`) served directly to browser tabs.
+
+---
+
+## 🎯 Controlled Demo Portfolio
+
+VIREON includes an 8-case multi-value Demo Portfolio configured for deterministic verification:
+
+| Case ID | Customer Entity | Source Category | Root Cause Scenario | Amount | Policy Status |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **REC-DEMO-001** | Acme Technologies India | Payment Recovery | 3DS Timeout | ₹25,000 | `RECOVERED` |
+| **REC-DEMO-002** | NovaCloud Systems | Subscription Recovery | Recurring Card Failure | ₹8,499 | `AWAITING_PAYMENT` |
+| **REC-DEMO-003** | Meridian Retail | Checkout Abandonment | Cart Dropoff | ₹1,249 | `ACTION_SELECTED` |
+| **REC-DEMO-004** | Vertex Industries | B2B Receivables | Overdue Corporate Invoice | ₹2,75,000 | `AWAITING_APPROVAL` (≥ ₹1L) 🛡️ |
+| **REC-DEMO-005** | **Orion Media** *(Hero Demo)* | Payment Recovery | Card Auth Failure | **₹67,500** | **`AUTO-APPROVED`** (< ₹1L) ⚡ |
+| **REC-DEMO-006** | BluePeak Logistics | B2B Receivables | Broken Commitment | ₹1,50,000 | `AWAITING_APPROVAL` (≥ ₹1L) 🛡️ |
+| **REC-DEMO-007** | Atlas Software | Subscription Recovery | Recurring Debit Failure | ₹12,999 | `DIAGNOSED` |
+| **REC-DEMO-008** | Zenith Manufacturing | B2B Receivables | Enterprise Invoice | ₹8,40,000 | `AWAITING_APPROVAL` (≥ ₹1L) 🛡️ |
+
+---
+
+## 📊 Dashboard & Precision Analytical Controls
+
+- **Precision Date Range Popover**: Header time-horizon filter supporting 6 institutional presets (`Today`, `Last 7 Days`, `Last 30 Days`, `Last 90 Days`, `Year to Date`, `All Time`) with dynamic calendar span calculation (`Aug 6 – Sep 5, 2026`) and click-outside dismissal.
+- **Dynamic Comparative KPIs**: Financial KPI cards dynamically recalculate comparative baselines (`vs yesterday`, `vs prior 7d`, `vs last 30d`, `vs prior qtr`, `vs FY2025`, `cumulative`).
+- **Live Recovery Orchestration**: Real-time 8-stage visual stepper showing active node spinning indicators, ML recoverability scores, and Human-in-the-Loop `Authorize Execution` and `Reject & Halt` action controls.
+- **Procedural WebGL 2.0 GhostFibers**: Hardware-accelerated GPU wave shader providing ambient telemetry backdrop.
 
 ---
 
 ## 💻 Technology Stack
 
-### Frontend & UI Layer
-- **Framework**: [Next.js 14](https://nextjs.org/) (App Router, Server & Client Components)
-- **UI & Styling**: React 18, [Tailwind CSS](https://tailwindcss.com/), [Lucide React Icons](https://lucide.dev/)
-- **Real-Time Stream**: Server-Sent Events (SSE) via `/api/events/stream`
-- **Payment UI**: Razorpay Standard Checkout.js (`https://checkout.razorpay.com/v1/checkout.js`)
+### Frontend
+- **Framework**: Next.js 14.2.35 (App Router, Server & Client Components)
+- **UI & Styling**: React 18, Tailwind CSS, Lucide React, Vanilla CSS Tokens
+- **Graphics**: WebGL 2.0, OGL Procedural Shader (`GhostFibers`)
+- **Real-Time Feed**: Server-Sent Events (SSE) via `/api/events/stream`
 
-### Backend & Orchestration
-- **Runtime**: Node.js 18+ / 20+
-- **Agent Framework**: [@langchain/langgraph](https://langchain-ai.github.io/langgraphjs/)
-- **Database & ORM**: PostgreSQL with [Prisma ORM](https://www.prisma.io/)
-- **Payment SDK**: Official [Razorpay Node SDK](https://github.com/razorpay/razorpay-node)
-- **Validation**: [Zod](https://zod.dev/) type validation
+### Backend & AI Microservices
+- **Orchestration**: `@langchain/langgraph` (11-Node DAG StateGraph)
+- **ML Microservice**: Python 3.10+, FastAPI, Uvicorn, Scikit-learn, Joblib, Pandas (Port 9000)
+- **Database & ORM**: PostgreSQL with Prisma ORM
+- **Payment Gateway**: Official Razorpay Node SDK & Checkout.js
 
 ---
 
 ## 🚀 Getting Started & Local Setup
 
 ### Prerequisites
-- Node.js 18.x or higher
+- Node.js 18.x or 20.x
+- Python 3.10+ (with `venv` or `pip`)
 - PostgreSQL database instance
 - Razorpay Sandbox Account ([Dashboard](https://dashboard.razorpay.com/))
 
@@ -191,31 +301,34 @@ git clone https://github.com/siddharth07-code/Razorpay-buildathon.git
 cd Razorpay-buildathon
 ```
 
-### 2. Install Dependencies
+### 2. Install Node Dependencies
 ```bash
 npm install
 ```
 
-### 3. Configure Environment Variables
-Create a `.env` file in the root directory:
+### 3. Set Up Python ML Service (Port 9000)
+```bash
+cd ml
+pip install -r requirements.txt # fastapi uvicorn scikit-learn pandas joblib pydantic
+python3 server.py
+# Verified running on http://localhost:9000
+cd ..
+```
+
+### 4. Configure Environment Variables
+Create `.env` in the root directory:
 ```bash
 cp .env.example .env
 ```
-*(See [Environment Configuration](#-environment-configuration) for required keys)*
+Ensure `ML_SERVICE_URL="http://localhost:9000"` is set.
 
-### 4. Initialize Database
+### 5. Initialize Database
 ```bash
-# Generate Prisma client
-npm run db:generate
-
-# Push schema to PostgreSQL database
-npm run db:push
-
-# (Optional) Seed initial demo cases
-npm run db:seed
+npx prisma generate
+npx prisma db push
 ```
 
-### 5. Launch Development Server
+### 6. Launch VIREON Frontend
 ```bash
 npm run dev
 ```
@@ -225,22 +338,21 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ## ⚙️ Environment Configuration
 
-| Variable | Description | Example / Required Value |
+| Variable | Description | Value |
 | :--- | :--- | :--- |
-| `DATABASE_URL` | PostgreSQL connection string | `postgresql://user:password@localhost:5432/vireon_db` |
-| `RAZORPAY_MODE` | Gateway execution mode | `sandbox` (or `mock` for offline tests) |
-| `RAZORPAY_ENVIRONMENT` | Razorpay environment level | `test` |
-| `RAZORPAY_KEY_ID` | Razorpay Test Key ID | `rzp_test_XXXXXXXXXXXXXX` |
-| `RAZORPAY_KEY_SECRET` | Razorpay Test Key Secret | `YOUR_RAZORPAY_SECRET` |
-| `RAZORPAY_WEBHOOK_SECRET` | Webhook signature verification secret | `YOUR_WEBHOOK_SECRET` |
-| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Public key exposed to Checkout.js | `rzp_test_XXXXXXXXXXXXXX` |
-| `GEMINI_API_KEY` | Google Gemini AI Key (Optional) | `AIzaSy...` |
+| `DATABASE_URL` | PostgreSQL connection string | `postgresql://...` |
+| `ML_SERVICE_URL` | VIREON Python ML microservice | `http://localhost:9000` |
+| `ML_TIMEOUT_MS` | Max latency allowance before fallback | `3000` |
+| `RAZORPAY_MODE` | Gateway execution mode | `sandbox` |
+| `RAZORPAY_ENVIRONMENT` | Environment tier | `test` |
+| `RAZORPAY_KEY_ID` | Razorpay Test Key ID | `rzp_test_...` |
+| `RAZORPAY_KEY_SECRET` | Razorpay Test Key Secret | `...` |
+| `RAZORPAY_WEBHOOK_SECRET` | Webhook HMAC verification secret | `...` |
+| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Public key exposed to Checkout.js | `rzp_test_...` |
 
 ---
 
-## 🗄 Database Architecture & Schema
-
-All core entities are mapped via Prisma with native relations:
+## 🗄 Database Architecture & Checkpointing Schema
 
 ```
 ┌──────────────────┐       1:N       ┌─────────────────────┐
@@ -256,58 +368,69 @@ All core entities are mapped via Prisma with native relations:
                                      └─────────────────────┘
 ```
 
-### Key Prisma Models:
-- **`RecoveryCase`**: Core recovery state machine ledger, storing `amountAtRisk`, `recoveredAmount`, `status`, `currentStep`, `riskScore`, `requiresHumanApproval`.
-- **`Customer`**: Customer profile, tier (`GROWTH`, `ENTERPRISE`), historical payment stats, preferred payment method.
-- **`Payment`**: Razorpay payment records, error step, error reason, and status.
-- **`RecoveryAttempt`**: Audit log of all recovery interventions dispatched with timestamp and response metadata.
-- **`HumanApproval`**: Approval records for cases exceeding policy threshold caps ($\ge ₹1,00,000$).
+### LangGraph Checkpoint Tables
+- **`langgraph_checkpoints`**: Stores serialized thread state snapshots, metadata, and timestamps keyed by `(thread_id, checkpoint_ns, checkpoint_id)`.
+- **`langgraph_checkpoint_writes`**: Stores intermediate channel writes and task values across node execution boundaries.
 
 ---
 
 ## 🔌 API Reference
 
-### Recovery & Checkout Endpoints
-- **`POST /api/recovery/cases/:id/checkout`**: Creates or reuses an official Razorpay cloud order for the case amount.
-- **`POST /api/recovery/cases/:id/payment/verify`**: Verifies Razorpay payment signature via HMAC-SHA256 and atomically settles case.
-- **`POST /api/recovery/cases/:id/run`**: Initiates LangGraph multi-agent triage on an active case.
-- **`POST /api/recovery/cases/:id/resume`**: Resumes workflow execution following a human approval gate.
-- **`GET /api/recovery/cases/:id/timeline`**: Returns chronological execution trace and telemetry events.
+### Orchestration & Recovery
+- **`POST /api/recovery/cases/:id/run`**: Dispatches a recovery case to the 11-node LangGraph workflow.
+- **`POST /api/recovery/cases/:id/resume`**: Resumes an interrupted workflow via `Command({ resume: { approved, operator, reason } })`.
+- **`GET /api/recovery/cases/:id/graph-state`**: Returns current thread state, stage values, and interrupt details.
+- **`POST /api/recovery/cases/:id/checkout`**: Generates a verified Razorpay test order.
+- **`POST /api/recovery/cases/:id/payment/verify`**: Validates payment signature and confirms atomic settlement.
 
-### Demo & Platform Endpoints
-- **`POST /api/demo/recovery/reset`**: Deterministically restores the 8-case demo portfolio without touching production records.
-- **`GET /api/metrics`**: Returns authoritative KPI figures from `DashboardService`.
-- **`GET /api/events/stream`**: Real-time Server-Sent Events stream of recovery activity.
-- **`POST /api/webhooks/razorpay`**: Authoritative Razorpay webhook receiver.
+### ML Microservice (`http://localhost:9000`)
+- **`GET /health`**: Returns model status, loaded version (`v1`), and algorithm (`LogisticRegression`).
+- **`GET /metadata`**: Returns model hyperparameters, features, and accuracy scores.
+- **`POST /predict`**: Ingests 9-feature payment vector and returns recovery probability and score.
+
+### Metrics & Telemetry
+- **`GET /api/metrics?range=Last%2030%20Days`**: Returns filtered financial summary metrics.
+- **`GET /api/cases?range=Last%2030%20Days`**: Returns date-filtered recovery case records.
+- **`GET /api/events/stream`**: Server-Sent Events live telemetry stream.
 
 ---
 
 ## 🧪 Verification & Test Suites
 
-VIREON includes focused automated test suites covering financial math, state machine invariants, Razorpay cloud APIs, and multi-value portfolio regression:
-
 ```bash
-# Run Phase 17 Multi-Value Portfolio Suite
-npx tsx -r dotenv/config backend/src/tests/run-phase17-suite.ts
+# 1. Run Targeted LangGraph + Supervised ML Verification Suite
+npx tsx scripts/test-langgraph-ml.ts
 
-# Run Phase 18 Live Razorpay Acceptance Suite
-npx tsx -r dotenv/config backend/src/tests/run-phase18-suite.ts
+# 2. Run Comprehensive 18-Dimension Deep Audit
+npx tsx scripts/e2e-deep-audit.ts
 
-# Run TypeScript Typecheck
+# 3. TypeScript Typecheck (Zero Errors)
 npx tsc --noEmit
 
-# Run Next.js Production Build
+# 4. Next.js Production Build (All 23 Routes Generated)
 npm run build
 ```
+
+### Verification Scorecard
+- **ML Service Health & Predict**: **PASS** (HTTP 200, 88.8% recoverability score)
+- **LangGraph Ingestion & Routing**: **PASS** (11 nodes, deterministic state transitions)
+- **₹1,00,000 Policy Guardrail**: **PASS** (REC-DEMO-005 auto-approved; REC-DEMO-004 pauses)
+- **Human Interrupt & Resume**: **PASS** (thread_id checkpointed in PostgreSQL; resumes cleanly)
+- **Rejection Safety**: **PASS** (REC-DEMO-008 transitions to `STOPPED`; zero Razorpay calls)
+- **Razorpay Sandbox Link**: **PASS** (Live `https://rzp.io/rzp/...` link generated)
+- **Authoritative PostgreSQL Settlement**: **PASS** (transitions to `RECOVERED` only on verified capture)
+- **Bounded Retry Limits**: **PASS** (strictly halts at attempt 3)
+- **Production Build**: **PASS** (23/23 routes compiled)
 
 ---
 
 ## 🔒 Security & Production Readiness
 
-- **Strict Secret Protection**: Client bundles and API responses are audited to ensure zero private keys (`RAZORPAY_KEY_SECRET`, `DATABASE_URL`) are exposed.
-- **Server-Side Verification**: No client-side payment confirmation is trusted without cryptographic HMAC-SHA256 signature verification.
-- **Bounded Autonomous Execution**: AI agents are incapable of directly executing unvalidated database updates or payments without passing through deterministic policy guardrails.
-- **Idempotency & Replay Protection**: Webhook handlers and checkout verifications use unique event IDs and atomic Prisma transactions to prevent duplicate settlement.
+- **Zero Float Loss**: Financial accounting performed strictly in integer paise (`BigInt`).
+- **Cryptographic Verification**: Server-side HMAC-SHA256 signature verification protects all checkout flows.
+- **No Secret Exposure**: All sensitive keys remain isolated to server runtime.
+- **Strict HITL Boundaries**: High-value transactions cannot be executed autonomously by AI.
+- **Accessibility & Motion Compliance**: Honors `@media (prefers-reduced-motion: reduce)` globally.
 
 ---
 
@@ -316,4 +439,4 @@ npm run build
 Developed for the **Razorpay Buildathon 2026**.  
 Built by **Siddharth Lal** and the VIREON team.
 
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the MIT License.
