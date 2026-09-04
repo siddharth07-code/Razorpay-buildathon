@@ -22,6 +22,7 @@ import {
   Radio,
 } from "lucide-react";
 import { RazorpayCheckoutButton } from "../payment/RazorpayCheckoutButton";
+import { LiveRecoveryOrchestration } from "./LiveRecoveryOrchestration";
 
 interface LiveEvent {
   id: string;
@@ -453,6 +454,15 @@ export function LiveRecoveryDemoModal({
           </div>
         ) : (
           <div className="space-y-4">
+            {/* Live LangGraph StateGraph & ML Recoverability Model */}
+            {demoData?.caseId && (
+              <LiveRecoveryOrchestration
+                caseId={demoData.caseId}
+                caseNumber={demoData.caseNumber}
+                amountRupees={demoData.amountAtRiskRupees}
+              />
+            )}
+
             {/* Progressive Disclosure Agent Row */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {/* Risk Agent */}

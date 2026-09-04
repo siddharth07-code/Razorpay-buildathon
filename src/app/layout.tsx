@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   title: "VIREON — Revenue Intelligence Infrastructure",
   description:
     "VIREON intelligently orchestrates revenue recovery across payments, subscriptions, checkout, and receivables.",
+  icons: {
+    icon: "/icon.svg",
+    shortcut: "/icon.svg",
+    apple: "/icon.svg",
+  },
 };
 
 export default function RootLayout({

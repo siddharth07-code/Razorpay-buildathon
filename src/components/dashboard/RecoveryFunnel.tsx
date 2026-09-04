@@ -2,7 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Zap, Shield, ArrowRight } from "lucide-react";
 import { formatINR } from "@/lib/utils";
 
 export interface FunnelStage {
@@ -35,28 +35,37 @@ export function RecoveryFunnel({
   ];
 
   return (
-    <div className="bg-[#080D15] border border-[#151E2E] rounded-2xl p-5 space-y-6 shadow-sm flex flex-col justify-between">
+    <div className="bg-gradient-to-b from-[#0C121D] via-[#080D15] to-[#05080E] border border-[#1E293B] hover:border-cyan-500/40 rounded-2xl p-5 space-y-6 shadow-xl flex flex-col justify-between relative overflow-hidden group transition-all duration-300">
+      {/* Top Subtle Cyan Glow Line */}
+      <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-70 group-hover:opacity-100 transition-opacity" />
+
       {/* Top Header */}
       <div className="flex items-center justify-between">
-        <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest">
-          RECOVERY PIPELINE
-        </h3>
+        <div className="flex items-center gap-2">
+          <div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse status-dot-active" />
+          <h3 className="text-xs font-bold text-white uppercase tracking-widest">
+            QUANTUM RECOVERY PIPELINE
+          </h3>
+          <span className="px-1.5 py-0.5 rounded text-[9px] font-mono font-bold bg-cyan-950/60 border border-cyan-500/30 text-cyan-300">
+            7-STAGE AUTOMATION
+          </span>
+        </div>
         <Link
           href="/operations"
-          className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-cyan-400 font-medium transition"
+          className="flex items-center gap-1.5 text-[11px] text-cyan-400 hover:text-cyan-300 font-mono font-medium transition group/link"
         >
-          <span>View Operations Console</span>
-          <ExternalLink className="w-3 h-3" />
+          <span>Operations Console</span>
+          <ExternalLink className="w-3 h-3 group-hover/link:translate-x-0.5 transition-transform" />
         </Link>
       </div>
 
       {/* 7-Stage Connected Timeline Nodes with Animated Progression Flow */}
       <div className="overflow-x-auto pb-1 -mx-1 px-1">
-        <div className="relative py-2 px-2 min-w-[480px] sm:min-w-0">
+        <div className="relative py-3 px-2 min-w-[520px] sm:min-w-0">
           {/* Connecting Line Track */}
-          <div className="absolute top-[21px] left-6 right-6 h-[2px] bg-[#151E2E] z-0 overflow-hidden">
-            {/* Animated Flowing Beam */}
-            <div className="h-full bg-gradient-to-r from-emerald-500/80 via-cyan-400 to-transparent w-[68%] animate-beam-flow" />
+          <div className="absolute top-[25px] left-6 right-6 h-[2px] bg-[#151E2E] z-0 overflow-hidden">
+            {/* Animated Flowing Gradient Beam */}
+            <div className="h-full bg-gradient-to-r from-emerald-500 via-cyan-400 to-transparent w-[72%] animate-beam-flow shadow-[0_0_10px_#22D3EE]" />
           </div>
 
           <div className="flex items-center justify-between relative z-10">
@@ -68,25 +77,25 @@ export function RecoveryFunnel({
                 <div key={node.step} className="flex flex-col items-center group cursor-default">
                   {/* Node Circle */}
                   <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-mono font-bold transition-all duration-300 relative ${
+                    className={`w-8 h-8 rounded-full flex items-center justify-center text-[10px] font-mono font-bold transition-all duration-300 relative ${
                       isCompleted
-                        ? "bg-[#080D15] border-2 border-emerald-500 text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)] group-hover:scale-105"
+                        ? "bg-[#080D15] border-2 border-emerald-500 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.4)] group-hover:scale-110"
                         : isActive
-                        ? "bg-[#080D15] border-2 border-cyan-400 text-cyan-300 shadow-[0_0_14px_rgba(34,211,238,0.8)] scale-110"
-                        : "bg-[#080D15] border border-slate-700 text-slate-400 group-hover:border-slate-600"
+                        ? "bg-[#080D15] border-2 border-cyan-400 text-cyan-300 shadow-[0_0_18px_rgba(34,211,238,0.9)] scale-110"
+                        : "bg-[#080D15] border border-slate-700 text-slate-500 group-hover:border-slate-600"
                     }`}
                   >
                     {isActive && (
-                      <span className="absolute -inset-1 rounded-full border border-cyan-400/50 animate-ping opacity-50 pointer-events-none" />
+                      <span className="absolute -inset-1 rounded-full border border-cyan-400 animate-ping opacity-60 pointer-events-none" />
                     )}
                     {node.step}
                   </div>
 
                   {/* Step Label */}
                   <span
-                    className={`text-[9px] font-bold tracking-wider uppercase mt-2 transition-colors ${
+                    className={`text-[9px] font-bold tracking-wider uppercase mt-2.5 transition-colors ${
                       isActive
-                        ? "text-cyan-300 drop-shadow-[0_0_6px_rgba(34,211,238,0.6)]"
+                        ? "text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] font-mono font-extrabold"
                         : isCompleted
                         ? "text-slate-300 group-hover:text-white"
                         : "text-slate-500 group-hover:text-slate-400"
@@ -102,8 +111,8 @@ export function RecoveryFunnel({
       </div>
 
       {/* Bottom Metric Strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-[#151E2E]/80">
-        <div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-[#1E293B]">
+        <div className="p-2.5 rounded-xl bg-[#05080E]/60 border border-[#1E293B]">
           <div className="text-lg sm:text-xl font-bold text-white font-mono">
             {activeCasesCount}
           </div>
@@ -112,8 +121,8 @@ export function RecoveryFunnel({
           </div>
         </div>
 
-        <div>
-          <div className="text-lg sm:text-xl font-bold text-white font-mono">
+        <div className="p-2.5 rounded-xl bg-[#05080E]/60 border border-[#1E293B]">
+          <div className="text-lg sm:text-xl font-bold text-cyan-300 font-mono">
             {formatINR(pipelineAmount)}
           </div>
           <div className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">
@@ -121,8 +130,8 @@ export function RecoveryFunnel({
           </div>
         </div>
 
-        <div>
-          <div className="text-lg sm:text-xl font-bold text-white font-mono">
+        <div className="p-2.5 rounded-xl bg-[#05080E]/60 border border-[#1E293B]">
+          <div className="text-lg sm:text-xl font-bold text-emerald-400 font-mono">
             {recoveryRate}%
           </div>
           <div className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">
@@ -130,12 +139,12 @@ export function RecoveryFunnel({
           </div>
         </div>
 
-        <div>
-          <div className="text-lg sm:text-xl font-bold text-white font-mono">
+        <div className="p-2.5 rounded-xl bg-[#05080E]/60 border border-[#1E293B]">
+          <div className="text-lg sm:text-xl font-bold text-violet-400 font-mono">
             {avgTimeToRecover}
           </div>
           <div className="text-[10px] text-slate-400 uppercase tracking-wider font-medium">
-            Avg. Time to Recover
+            Avg. Resolution
           </div>
         </div>
       </div>

@@ -3,6 +3,8 @@
 import React from "react";
 import Link from "next/link";
 import { HolographicVireonVisual } from "@/components/dashboard/HolographicVireonVisual";
+import GhostFibers from "@/components/GhostFibers";
+import { VireonLogo } from "@/components/brand/VireonLogo";
 import {
   ArrowRight,
   ShieldCheck,
@@ -29,19 +31,9 @@ export default function VireonLandingPage() {
     <div className="min-h-screen bg-[#05080D] text-slate-100 selection:bg-blue-600 selection:text-white -m-4 sm:-m-5 lg:-m-6 overflow-x-hidden">
       {/* Top Navbar */}
       <nav className="h-16 border-b border-[#151E2E] bg-[#080D15]/85 backdrop-blur-lg px-4 sm:px-8 lg:px-12 flex items-center justify-between sticky top-0 z-50 transition-all">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-400 p-[1px] shadow-lg shadow-blue-900/30">
-            <div className="w-full h-full bg-[#080D15] rounded-[7px] flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-cyan-400" stroke="currentColor" strokeWidth="2.5">
-                <path d="M4 4l8 16 8-16" />
-              </svg>
-            </div>
-          </div>
-          <span className="font-extrabold text-lg text-white tracking-widest uppercase">VIREON</span>
-          <span className="hidden md:inline text-[9px] font-mono text-slate-400 border-l border-slate-700 pl-3 uppercase">
-            Revenue Intelligence Infrastructure
-          </span>
-        </div>
+        <Link href="/" className="flex items-center gap-3">
+          <VireonLogo variant="full" size="md" showTagline={true} animated={true} />
+        </Link>
 
         <div className="flex items-center gap-3 sm:gap-4">
           <Link
@@ -57,6 +49,12 @@ export default function VireonLandingPage() {
             Cases
           </Link>
           <Link
+            href="/ghost-fibers"
+            className="text-xs text-cyan-400 hover:text-cyan-300 font-mono font-medium transition hidden md:inline"
+          >
+            GhostFibers
+          </Link>
+          <Link
             href="/"
             className="flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold px-3.5 sm:px-4 py-2 rounded-xl shadow-lg shadow-blue-900/30 transition hover:-translate-y-0.5 active:scale-[0.98] group"
           >
@@ -70,6 +68,27 @@ export default function VireonLandingPage() {
       <section className="relative px-4 sm:px-8 lg:px-12 pt-12 sm:pt-16 pb-20 sm:pb-24 max-w-7xl mx-auto overflow-hidden">
         {/* Animated Background Grid Pattern */}
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#151E2E18_1px,transparent_1px),linear-gradient(to_bottom,#151E2E18_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none animate-grid-drift" />
+
+        {/* Ambient GhostFibers Neural Wave Shader Layer */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-45">
+          <GhostFibers
+            lineColor="#071224"
+            glowColor="#00d8ff"
+            speed={0.12}
+            scale={2.4}
+            layers={6}
+            waveAmplitude={0.012}
+            waveFrequency={2.5}
+            waveSpeed={-0.5}
+            layerSpeed={0.06}
+            glowIntensity={1.5}
+            brightness={1.8}
+            blueBoost={1.3}
+            vignette={0.8}
+            grain={0.03}
+            dpr={1.5}
+          />
+        </div>
 
         {/* Slow Ambient Glow */}
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] bg-gradient-to-tr from-blue-600/15 via-cyan-500/10 to-violet-600/15 blur-[130px] pointer-events-none animate-pulse-glow" />
@@ -432,6 +451,76 @@ export default function VireonLandingPage() {
         </div>
       </section>
 
+      {/* SECTION 5.5: NEURAL REVENUE FABRIC (GHOST FIBERS) */}
+      <section className="px-4 sm:px-8 lg:px-12 py-16 sm:py-20 border-t border-[#151E2E] bg-[#05080E] relative overflow-hidden">
+        <div className="max-w-7xl mx-auto space-y-8 text-center">
+          <div className="space-y-2 max-w-2xl mx-auto">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#0E1522] border border-cyan-500/30 text-cyan-400 text-[11px] font-semibold tracking-wider uppercase">
+              <Sparkles className="w-3 h-3 text-cyan-400" />
+              <span>NEURAL RECOVERY FABRIC</span>
+            </div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
+              Real-Time Procedural Fiber Waveforms
+            </h2>
+            <p className="text-xs sm:text-sm text-slate-400">
+              GPU-accelerated WebGL shader dynamics powered by <code className="text-cyan-300 font-mono">ogl</code>. Visualizing continuous payment topology and autonomous resolution loops.
+            </p>
+          </div>
+
+          {/* Usage Example: 100% width, 600px height, relative */}
+          <div className="rounded-2xl border border-[#151E2E] overflow-hidden shadow-2xl relative bg-[#04060A]">
+            <div style={{ width: '100%', height: '600px', position: 'relative' }}>
+              <GhostFibers
+                lineColor="#0e0e35"
+                glowColor="#a0347d"
+                speed={0.2}
+                scale={2}
+                rotation={0}
+                rotationSpeed={0.25}
+                layers={8}
+                waveAmplitude={0.015}
+                waveFrequency={3}
+                waveSpeed={-0.85}
+                layerSpeed={0.08}
+                twist={0.1}
+                twistFrequency={5}
+                twistSpeed={1.2}
+                lineFrequency={5}
+                lineSpacing={2}
+                lineSharpness={16}
+                glowFalloff={10}
+                glowIntensity={1.6}
+                brightness={2}
+                blueBoost={1.25}
+                vignette={0.8}
+                grain={0.05}
+                dpr={2}
+              />
+
+              {/* Floating Institutional Badge */}
+              <div className="absolute bottom-5 left-5 z-10 bg-[#080D15]/80 backdrop-blur-md border border-[#151E2E] rounded-xl px-4 py-2.5 text-left font-mono text-xs text-slate-300 pointer-events-none">
+                <div className="text-[10px] text-cyan-400 font-bold uppercase tracking-wider">
+                  NEURAL_FIBER_TELEMETRY
+                </div>
+                <div className="text-[11px] text-slate-400">
+                  GPU Shader • 8 Concurrent Wave Layers • WebGL 2.0
+                </div>
+              </div>
+
+              <div className="absolute top-4 right-4 z-10">
+                <Link
+                  href="/ghost-fibers"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#080D15]/90 backdrop-blur-md border border-cyan-500/40 text-cyan-300 text-xs font-mono font-semibold hover:bg-cyan-950/50 hover:border-cyan-400 transition shadow-lg"
+                >
+                  <span>Interactive Controls &amp; Palettes</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* SECTION 6: FINAL CTA */}
       <section className="px-4 sm:px-8 lg:px-12 py-20 sm:py-24 border-t border-[#151E2E] bg-gradient-to-b from-[#080D15] to-[#04060A] text-center space-y-6">
         <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
@@ -453,12 +542,9 @@ export default function VireonLandingPage() {
 
       {/* Institutional Footer */}
       <footer className="border-t border-[#151E2E] bg-[#05080D] px-4 sm:px-8 lg:px-12 py-8 text-xs text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-white tracking-wider">VIREON</span>
-          <span>— Revenue Intelligence Infrastructure</span>
-        </div>
+        <VireonLogo variant="full" size="sm" showTagline={true} />
         <div className="font-mono text-[11px] text-slate-400">
-          © 2026 VIREON. Enterprise Edition v2.4.0.
+          © 2026 VIREON. Revenue Intelligence Infrastructure.
         </div>
       </footer>
     </div>

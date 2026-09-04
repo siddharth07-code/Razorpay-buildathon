@@ -10,19 +10,19 @@ import { CuratedRecentActivity } from "@/components/dashboard/CuratedRecentActiv
 import { ConciseCasesTable } from "@/components/dashboard/ConciseCasesTable";
 import { LiveRecoveryDemoPanel } from "@/components/dashboard/LiveRecoveryDemoPanel";
 import { RecoveryCase } from "@/types";
-import { Play } from "lucide-react";
 
 export default function OverviewPage() {
   const [metrics, setMetrics] = useState<any | null>(null);
   const [cases, setCases] = useState<RecoveryCase[]>([]);
   const [loading, setLoading] = useState(true);
   const [isDemoPanelOpen, setIsDemoPanelOpen] = useState(false);
+  const [dateRange, setDateRange] = useState("Last 30 Days");
 
-  const loadData = async () => {
+  const loadData = async (range = dateRange) => {
     try {
       const [mRes, cRes] = await Promise.all([
-        fetch("/api/metrics"),
-        fetch("/api/cases"),
+        fetch(`/api/metrics?range=${encodeURIComponent(range)}`),
+        fetch(`/api/cases?range=${encodeURIComponent(range)}`),
       ]);
 
       if (mRes.ok) {
@@ -42,12 +42,12 @@ export default function OverviewPage() {
   };
 
   useEffect(() => {
-    loadData();
+    loadData(dateRange);
     const interval = setInterval(() => {
-      loadData();
+      loadData(dateRange);
     }, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [dateRange]);
 
   const totalAtRisk = metrics?.totalRevenueAtRisk !== undefined ? metrics.totalRevenueAtRisk : 1380247;
   const totalPipeline = metrics?.totalExpectedRecovery !== undefined ? metrics.totalExpectedRecovery : 1109980;
@@ -55,11 +55,21 @@ export default function OverviewPage() {
   const recoveryRate = metrics?.autonomousRecoveryRate !== undefined ? metrics.autonomousRecoveryRate : 68.3;
 
   return (
-    <div className="space-y-5 w-full">
-      {/* Top Application Header matching Reference Design */}
+    <div className="relative space-y-5 w-full min-h-screen">
+      {/* Futuristic Ambient Spatial Atmosphere & Cybernetic Grid */}
+      <div className="absolute -top-12 -left-20 -right-20 h-96 bg-[radial-gradient(ellipse_80%_60%_at_50%_-20%,rgba(34,211,238,0.08),rgba(139,92,246,0.05),transparent)] pointer-events-none -z-10" />
+      <div className="absolute top-1/3 -right-32 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none -z-10" />
+      <div className="absolute top-2/3 -left-32 w-96 h-96 bg-violet-600/5 rounded-full blur-3xl pointer-events-none -z-10" />
+
+      {/* Top Application Header with Functional Precision Date Range Dropdown */}
       <Header
-        onRefresh={loadData}
-        onQuickInject={loadData}
+        onRefresh={() => loadData(dateRange)}
+        onQuickInject={() => loadData(dateRange)}
+        dateRange={dateRange}
+        onDateRangeChange={(newRange) => {
+          setDateRange(newRange);
+          loadData(newRange);
+        }}
         pageTitle="Overview"
       />
 
@@ -77,6 +87,7 @@ export default function OverviewPage() {
                   totalRevenueRecovered: totalRecovered,
                   autonomousRecoveryRate: recoveryRate,
                   activeCasesCount: cases.length || 142,
+                  dateRangeLabel: dateRange,
                 }}
               />
             </div>
@@ -126,7 +137,7 @@ export default function OverviewPage() {
           <div className="animate-fadeInUp delay-3">
             <ConciseCasesTable
               cases={cases}
-              onCaseUpdated={loadData}
+              onCaseUpdated={() => loadData(dateRange)}
               onInspectCase={() => setIsDemoPanelOpen(true)}
             />
           </div>
@@ -144,3 +155,4 @@ export default function OverviewPage() {
     </div>
   );
 }
+

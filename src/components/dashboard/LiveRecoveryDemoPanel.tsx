@@ -158,16 +158,20 @@ export function LiveRecoveryDemoPanel({
   const paymentLink = demoData?.paymentLinkUrl || "https://rzp.io/i/demo_link_vireon";
 
   return (
-    <div className="w-full lg:w-[380px] xl:w-[410px] shrink-0 bg-[#0F1523] border border-[#1E293B] rounded-2xl p-5 space-y-5 shadow-xl flex flex-col justify-between animate-in fade-in slide-in-from-right-4 duration-200">
+    <div className="w-full lg:w-[380px] xl:w-[410px] shrink-0 bg-gradient-to-b from-[#0C121D] via-[#080D15] to-[#05080E] border border-[#1E293B] rounded-2xl p-5 space-y-5 shadow-2xl flex flex-col justify-between animate-in fade-in slide-in-from-right-4 duration-200 relative overflow-hidden">
+      {/* Top Radiant Cyan-Violet Laser Line */}
+      <div className="absolute top-0 inset-x-0 h-[2px] bg-gradient-to-r from-transparent via-cyan-400 to-violet-500 opacity-90 animate-pulse" />
+
       <div className="space-y-4">
         {/* Panel Header */}
         <div className="flex items-center justify-between border-b border-[#1E293B]/80 pb-3.5">
           <div className="flex items-center gap-2">
-            <h2 className="text-sm font-bold text-white tracking-tight">
-              Live Recovery Demo
+            <h2 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
+              <span>Live Recovery Demo</span>
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse status-dot-active" />
             </h2>
-            <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
-              LIVE
+            <span className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold bg-cyan-950/80 text-cyan-300 border border-cyan-500/30">
+              AUTONOMOUS
             </span>
           </div>
 

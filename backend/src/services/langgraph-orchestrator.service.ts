@@ -1,7 +1,11 @@
-import { recoveryGraph, RecoveryGraphState } from "../workflows/recovery.graph";
+import {
+  recoveryWorkflowGraph,
+  RecoveryWorkflowState,
+} from "../../../src/lib/langgraph/recovery-graph";
+import { Command } from "@langchain/langgraph";
 import { prisma } from "../config/prisma";
 import { recoveryOrchestrator as legacyOrchestrator } from "./orchestrator.service";
-import { serializeBigInt } from "../utils/money";
+import { serializeBigInt, fromPaise } from "../utils/money";
 import { eventService } from "./event.service";
 import { RecoveryStateMachine } from "./state-machine.service";
 
@@ -61,76 +65,69 @@ export class LangGraphRecoveryOrchestrator {
     }
 
     // LangGraph Orchestration Execution
-    const threadId = `recovery-case:${caseId}`;
+    // Stable thread ID: caseId
+    const threadId = caseId;
 
-    await eventService.publishEvent({
-      caseId: recCase.id,
-      caseNumber: recCase.caseNumber,
-      type: "RECOVERY_STARTED",
-      actor: "LANGGRAPH_ORCHESTRATOR",
-      status: "running",
-      description: `LangGraph StateGraph initialized for case ${recCase.caseNumber} [thread_id: ${threadId}]`,
-    });
-
-    const isSub = Boolean(recCase.subscriptionId || recCase.razorpaySubscriptionId);
-    const isCheckout = Boolean(recCase.orderId || recCase.razorpayOrderId || recCase.rootCause === "checkout_abandonment");
-    const isInvoice = Boolean(recCase.invoiceId || recCase.razorpayInvoiceId || recCase.caseNumber.startsWith("REC-INV") || recCase.rootCause === "overdue_invoice");
-    const hasBrokenPromise = Boolean(
-      recCase.invoice?.promiseToPays?.some((p) => p.status === "BROKEN") ||
-      recCase.rootCauseDetails?.toLowerCase().includes("broken promise") ||
-      recCase.rootCauseDetails?.toLowerCase().includes("missed promise") ||
-      recCase.rootCause === "missed_promise_to_pay"
-    );
-    const checkoutAge = recCase.order?.createdAt
-      ? Math.round((Date.now() - recCase.order.createdAt.getTime()) / 60000)
-      : 30;
     const daysOverdue = recCase.invoice?.dueDate
-      ? Math.max(1, Math.floor((Date.now() - recCase.invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24)))
-      : 1;
+      ? Math.max(0, Math.floor((Date.now() - recCase.invoice.dueDate.getTime()) / (1000 * 60 * 60 * 24)))
+      : 0;
 
-    const initialState: Partial<RecoveryGraphState> = {
+    const customerTenureDays = recCase.customer?.createdAt
+      ? Math.max(1, Math.floor((Date.now() - recCase.customer.createdAt.getTime()) / (1000 * 60 * 60 * 24)))
+      : 30;
+
+    const initialState: Partial<RecoveryWorkflowState> = {
       caseId: recCase.id,
       caseNumber: recCase.caseNumber,
       customerId: recCase.customerId,
       paymentId: recCase.paymentId || undefined,
       orderId: recCase.orderId || undefined,
-      razorpayOrderId: recCase.razorpayOrderId || undefined,
-      checkoutSessionId: recCase.orderId || undefined,
-      checkoutAgeMinutes: isCheckout ? checkoutAge : undefined,
       subscriptionId: recCase.subscriptionId || undefined,
-      razorpaySubscriptionId: recCase.razorpaySubscriptionId || undefined,
       invoiceId: recCase.invoiceId || undefined,
-      razorpayInvoiceId: recCase.razorpayInvoiceId || undefined,
-      daysOverdue: isInvoice ? daysOverdue : undefined,
-      isPromiseToPay: hasBrokenPromise,
-      revenueSource: isInvoice ? "INVOICE" : isSub ? "SUBSCRIPTION" : isCheckout ? "CHECKOUT" : "PAYMENT",
-      subscriptionStatus: recCase.subscription?.status || undefined,
       amountAtRiskPaise: recCase.amountAtRisk,
-      recoverableAmountPaise: recCase.recoverableAmount,
-      recoveredAmountPaise: recCase.recoveredAmount,
+      customerLTVPaise: recCase.customer?.lifetimeValue || 0n,
+      failureType: recCase.payment?.errorCode || "AUTHENTICATION_FAILURE",
+      paymentMethod: (recCase.payment?.method || "CARD").toUpperCase(),
+      daysOverdue,
+      previousSuccessfulPayments: recCase.customer?.successfulPayments || 0,
+      previousRecoveryAttempts: recCase.retryCount || 0,
+      customerTenureDays,
       retryCount: recCase.retryCount || 0,
-      currentNode: "START",
+      currentStage: "detect",
     };
 
-    const finalState = await recoveryGraph.invoke(initialState, {
+    const finalState: any = await recoveryWorkflowGraph.invoke(initialState, {
       configurable: { thread_id: threadId },
+    });
+
+    const isInterrupted = Boolean(finalState.__interrupt__ && finalState.__interrupt__.length > 0);
+    const interruptPayload = isInterrupted ? finalState.__interrupt__[0]?.value : null;
+
+    const updatedCase = await prisma.recoveryCase.findUnique({
+      where: { id: caseId },
     });
 
     return serializeBigInt({
       caseId: recCase.id,
       caseNumber: recCase.caseNumber,
       threadId,
-      status: finalState.paymentStatus || finalState.executionStatus || "IN_PROGRESS",
-      currentNode: finalState.currentNode,
+      status: updatedCase?.status || finalState.paymentStatus || finalState.executionStatus || "IN_PROGRESS",
+      currentStage: finalState.currentStage,
+      isInterrupted,
+      requiresHumanApproval: finalState.requiresApproval || isInterrupted,
+      interruptDetails: interruptPayload,
       state: {
-        riskScore: finalState.riskScore,
+        recoveryProbability: finalState.riskProbability,
         recoverabilityScore: finalState.recoverabilityScore,
+        priority: finalState.priority,
         rootCause: finalState.rootCause,
-        selectedAction: finalState.selectedAction,
-        policyDecision: finalState.policyDecision,
-        requiresHumanApproval: finalState.requiresHumanApproval,
-        paymentLinkUrl: finalState.paymentLinkUrl,
+        selectedStrategy: finalState.selectedStrategy,
+        requiresHumanApproval: finalState.requiresApproval || isInterrupted,
+        approvalStatus: finalState.approvalStatus,
+        policyReason: finalState.policyReason,
+        paymentLinkUrl: finalState.paymentLinkUrl || updatedCase?.paymentLinkUrl,
         executionStatus: finalState.executionStatus,
+        paymentStatus: finalState.paymentStatus,
       },
     });
   }
@@ -142,8 +139,8 @@ export class LangGraphRecoveryOrchestrator {
     caseId: string,
     params: { approved: boolean; operator?: string; reason?: string }
   ): Promise<any> {
-    const threadId = `recovery-case:${caseId}`;
-    const { approved, operator = "OPERATIONS_MANAGER" } = params;
+    const threadId = caseId;
+    const { approved, operator = "OPERATIONS_MANAGER", reason } = params;
 
     const recCase = await prisma.recoveryCase.findUnique({
       where: { id: caseId },
@@ -168,35 +165,37 @@ export class LangGraphRecoveryOrchestrator {
           actor: operator,
         });
       } else {
-        await legacyOrchestrator.stopRecovery(caseId, "Rejected by operations manager");
+        await legacyOrchestrator.stopRecovery(caseId, reason || "Rejected by operations manager");
       }
       return await prisma.recoveryCase.findUnique({ where: { id: caseId } });
     }
 
-    const resumeState: Partial<RecoveryGraphState> = {
-      caseId: recCase.id,
-      caseNumber: recCase.caseNumber,
-      customerId: recCase.customerId,
-      amountAtRiskPaise: recCase.amountAtRisk,
-      recoverableAmountPaise: recCase.recoverableAmount,
-      recoveredAmountPaise: recCase.recoveredAmount,
-      isApprovedByHuman: approved,
-      isRejectedByHuman: !approved,
-      humanOperator: operator,
-      requiresHumanApproval: false,
-    };
+    // Resume using official LangGraph Command({ resume: ... })
+    const resumeCommand = new Command({
+      resume: {
+        approved,
+        operator,
+        reason: reason || (approved ? "Authorized via dashboard" : "Rejected via dashboard"),
+      },
+    });
 
-    const result = await recoveryGraph.invoke(resumeState, {
+    const result: any = await recoveryWorkflowGraph.invoke(resumeCommand as any, {
       configurable: { thread_id: threadId },
+    });
+
+    const updatedCase = await prisma.recoveryCase.findUnique({
+      where: { id: caseId },
     });
 
     return serializeBigInt({
       caseId,
       threadId,
       resumed: true,
-      currentNode: result.currentNode,
-      paymentLinkUrl: result.paymentLinkUrl,
+      status: updatedCase?.status,
+      currentStage: result.currentStage,
+      paymentLinkUrl: result.paymentLinkUrl || updatedCase?.paymentLinkUrl,
       executionStatus: result.executionStatus,
+      paymentStatus: result.paymentStatus,
     });
   }
 
@@ -204,16 +203,34 @@ export class LangGraphRecoveryOrchestrator {
    * Retrieve the safe snapshot of the LangGraph workflow state
    */
   public async getWorkflowState(caseId: string): Promise<any> {
-    const threadId = `recovery-case:${caseId}`;
+    const threadId = caseId;
     try {
-      const state = await recoveryGraph.getState({
+      const state = await recoveryWorkflowGraph.getState({
         configurable: { thread_id: threadId },
       });
+
+      const values: any = state.values || {};
+      const isInterrupted = Boolean(state.tasks && state.tasks.some((t: any) => t.interrupts && t.interrupts.length > 0));
 
       return serializeBigInt({
         caseId,
         threadId,
-        values: state.values,
+        values: {
+          caseNumber: values.caseNumber,
+          currentStage: values.currentStage,
+          riskProbability: values.riskProbability,
+          recoverabilityScore: values.recoverabilityScore,
+          priority: values.priority,
+          rootCause: values.rootCause,
+          selectedStrategy: values.selectedStrategy,
+          requiresHumanApproval: values.requiresApproval || isInterrupted,
+          approvalStatus: values.approvalStatus,
+          policyReason: values.policyReason,
+          paymentLinkUrl: values.paymentLinkUrl,
+          executionStatus: values.executionStatus,
+          paymentStatus: values.paymentStatus,
+          isInterrupted,
+        },
         next: state.next,
       });
     } catch {
@@ -228,9 +245,9 @@ export class LangGraphRecoveryOrchestrator {
         values: {
           caseNumber: recCase?.caseNumber,
           status: recCase?.status,
+          currentStage: recCase?.currentStep || "riskScore",
           requiresHumanApproval: recCase?.requiresHumanApproval,
           paymentLinkUrl: recCase?.paymentLinkUrl,
-          currentNode: recCase?.currentStep || "risk",
         },
         next: [],
       });
@@ -238,40 +255,43 @@ export class LangGraphRecoveryOrchestrator {
   }
 
   /**
-   * Return the static graph topology structure for visualization
+   * Return the 11-node graph topology structure for visualization
    */
   public getGraphTopology() {
     return {
       nodes: [
-        { id: "START", label: "Recovery Event Trigger", type: "entry", layer: 0 },
-        { id: "risk", label: "Risk Scoring Agent", type: "agent", layer: 1 },
-        { id: "diagnosis", label: "Root Cause Diagnosis AI", type: "agent", layer: 2 },
-        { id: "strategy", label: "Recovery Strategy Agent", type: "agent", layer: 3 },
-        { id: "policy", label: "Deterministic Policy Engine", type: "guardrail", layer: 4 },
-        { id: "humanApproval", label: "Human-in-the-Loop Approval", type: "interrupt", layer: 5 },
-        { id: "execution", label: "Razorpay Execution Boundary", type: "action", layer: 6 },
-        { id: "outcome", label: "Outcome Verification Service", type: "evaluation", layer: 7 },
-        { id: "retry", label: "Bounded Retry Scheduler", type: "loop", layer: 4 },
-        { id: "escalation", label: "Operations Escalation Queue", type: "terminal", layer: 8 },
-        { id: "stop", label: "Safe Recovery Halt", type: "terminal", layer: 8 },
-        { id: "complete", label: "Recovery Finalized", type: "success", layer: 8 },
+        { id: "START", label: "Recovery Ingestion", type: "entry", layer: 0 },
+        { id: "detect", label: "Case Ingestion & Telemetry", type: "detection", layer: 1 },
+        { id: "riskScore", label: "Supervised ML Risk & Recoverability", type: "ml_model", layer: 2 },
+        { id: "diagnose", label: "Root Cause Diagnosis", type: "agent", layer: 3 },
+        { id: "strategy", label: "Strategy Formulation", type: "agent", layer: 4 },
+        { id: "policy", label: "Deterministic Policy Gate (₹1L Threshold)", type: "guardrail", layer: 5 },
+        { id: "humanApproval", label: "Human-in-the-Loop Approval (Interrupt)", type: "interrupt", layer: 6 },
+        { id: "execute", label: "Razorpay TEST Execution Boundary", type: "action", layer: 7 },
+        { id: "outcome", label: "PostgreSQL Outcome Verification", type: "evaluation", layer: 8 },
+        { id: "retry", label: "Bounded Retry Scheduler (Max 3)", type: "loop", layer: 5 },
+        { id: "escalate", label: "Operations Escalation Queue", type: "terminal", layer: 9 },
+        { id: "complete", label: "Recovery Settled & Finalized", type: "success", layer: 9 },
       ],
       edges: [
-        { from: "START", to: "risk", label: "Ingest failure" },
-        { from: "risk", to: "diagnosis", label: "Score evaluated" },
-        { from: "diagnosis", to: "strategy", label: "Root cause classified" },
-        { from: "strategy", to: "policy", label: "Action proposed" },
-        { from: "policy", to: "execution", label: "Policy Approved" },
-        { from: "policy", to: "humanApproval", label: ">= ₹1,00,000 threshold" },
-        { from: "policy", to: "stop", label: "Policy Blocked" },
-        { from: "humanApproval", to: "execution", label: "Operator Approved" },
-        { from: "humanApproval", to: "stop", label: "Operator Rejected" },
-        { from: "execution", to: "outcome", label: "Dispatched to Razorpay" },
-        { from: "execution", to: "retry", label: "Execution Failed" },
-        { from: "outcome", to: "complete", label: "Payment Captured" },
-        { from: "outcome", to: "retry", label: "Payment Unsettled" },
-        { from: "retry", to: "policy", label: "Re-evaluate Policy (< 3 attempts)" },
-        { from: "retry", to: "escalation", label: "Max Attempts Reached (>= 3)" },
+        { from: "START", to: "detect", label: "Ingest failure" },
+        { from: "detect", to: "riskScore", label: "Telemetry extracted" },
+        { from: "riskScore", to: "diagnose", label: "ML score evaluated" },
+        { from: "diagnose", to: "strategy", label: "Root cause diagnosed" },
+        { from: "strategy", to: "policy", label: "Intervention proposed" },
+        { from: "policy", to: "execute", label: "Auto-Approved (< ₹1,00,000)" },
+        { from: "policy", to: "humanApproval", label: "Human Required (≥ ₹1,00,000)" },
+        { from: "policy", to: "escalate", label: "Policy Blocked" },
+        { from: "humanApproval", to: "execute", label: "Operator Approved" },
+        { from: "humanApproval", to: "escalate", label: "Operator Rejected" },
+        { from: "execute", to: "outcome", label: "Dispatched to Razorpay" },
+        { from: "outcome", to: "complete", label: "Payment Captured / Active Link" },
+        { from: "outcome", to: "retry", label: "Failed (< 3 attempts)" },
+        { from: "outcome", to: "escalate", label: "Failed (≥ 3 attempts)" },
+        { from: "retry", to: "execute", label: "Re-execute" },
+        { from: "retry", to: "escalate", label: "Max attempts reached" },
+        { from: "complete", to: "END", label: "Settled" },
+        { from: "escalate", to: "END", label: "Escalated" },
       ],
     };
   }

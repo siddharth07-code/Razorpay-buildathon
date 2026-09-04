@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Search,
   Calendar,
@@ -14,16 +14,75 @@ import {
   Zap,
   RotateCcw,
   Menu,
+  Check,
+  Clock,
 } from "lucide-react";
+
+export interface DateRangePreset {
+  id: string;
+  label: string;
+  sublabel: string;
+  badge: string;
+  days: number;
+}
+
+export const DATE_RANGE_PRESETS: DateRangePreset[] = [
+  {
+    id: "today",
+    label: "Today",
+    sublabel: "Real-time intraday recovery & drop-offs",
+    badge: "24H",
+    days: 1,
+  },
+  {
+    id: "7d",
+    label: "Last 7 Days",
+    sublabel: "Weekly batch & mandate retry cycle",
+    badge: "7D",
+    days: 7,
+  },
+  {
+    id: "30d",
+    label: "Last 30 Days",
+    sublabel: "Standard rolling institutional billing period",
+    badge: "30D",
+    days: 30,
+  },
+  {
+    id: "90d",
+    label: "Last 90 Days",
+    sublabel: "Quarterly recovery risk & ledger view",
+    badge: "QTR",
+    days: 90,
+  },
+  {
+    id: "ytd",
+    label: "Year to Date (YTD)",
+    sublabel: "Fiscal year 2026 cumulative performance",
+    badge: "YTD",
+    days: -1,
+  },
+  {
+    id: "all",
+    label: "All Time",
+    sublabel: "Unconstrained complete audit ledger",
+    badge: "MAX",
+    days: 0,
+  },
+];
 
 export function Header({
   onQuickInject,
   onRefresh,
   pageTitle,
+  dateRange: controlledDateRange,
+  onDateRangeChange,
 }: {
   onQuickInject?: () => void;
   onRefresh?: () => void;
   pageTitle?: string;
+  dateRange?: string;
+  onDateRangeChange?: (newRange: string) => void;
 }) {
   const [showInjectModal, setShowInjectModal] = useState(false);
   const [showResetModal, setShowResetModal] = useState(false);
@@ -31,7 +90,62 @@ export function Header({
   const [isInjecting, setIsInjecting] = useState(false);
   const [injectSuccess, setInjectSuccess] = useState<string | null>(null);
   const [showStatusPopover, setShowStatusPopover] = useState(false);
-  const [dateRange, setDateRange] = useState("Last 30 Days");
+  const [showDateRangePopover, setShowDateRangePopover] = useState(false);
+  const [internalDateRange, setInternalDateRange] = useState("Last 30 Days");
+
+  const activeDateRange = controlledDateRange || internalDateRange;
+
+  const dateMenuRef = useRef<HTMLDivElement>(null);
+  const statusMenuRef = useRef<HTMLDivElement>(null);
+
+  // Click-outside listener
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dateMenuRef.current && !dateMenuRef.current.contains(e.target as Node)) {
+        setShowDateRangePopover(false);
+      }
+      if (statusMenuRef.current && !statusMenuRef.current.contains(e.target as Node)) {
+        setShowStatusPopover(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const getFormattedSpan = (presetLabel: string) => {
+    const now = new Date();
+    const options: Intl.DateTimeFormatOptions = { month: "short", day: "numeric", year: "numeric" };
+    const shortOptions: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+
+    if (presetLabel === "Today") {
+      return `${now.toLocaleDateString("en-US", options)} (Intraday)`;
+    }
+    if (presetLabel === "Last 7 Days") {
+      const start = new Date(now.getTime() - 7 * 86400000);
+      return `${start.toLocaleDateString("en-US", shortOptions)} – ${now.toLocaleDateString("en-US", options)}`;
+    }
+    if (presetLabel === "Last 30 Days") {
+      const start = new Date(now.getTime() - 30 * 86400000);
+      return `${start.toLocaleDateString("en-US", shortOptions)} – ${now.toLocaleDateString("en-US", options)}`;
+    }
+    if (presetLabel === "Last 90 Days") {
+      const start = new Date(now.getTime() - 90 * 86400000);
+      return `${start.toLocaleDateString("en-US", shortOptions)} – ${now.toLocaleDateString("en-US", options)}`;
+    }
+    if (presetLabel.startsWith("Year to Date") || presetLabel === "YTD") {
+      const start = new Date(now.getFullYear(), 0, 1);
+      return `${start.toLocaleDateString("en-US", shortOptions)} – ${now.toLocaleDateString("en-US", options)}`;
+    }
+    return "All Historic Telemetry";
+  };
+
+  const handleSelectDateRange = (label: string) => {
+    setInternalDateRange(label);
+    setShowDateRangePopover(false);
+    if (onDateRangeChange) {
+      onDateRangeChange(label);
+    }
+  };
 
   const handleResetDemo = async () => {
     setIsResetting(true);
@@ -107,7 +221,7 @@ export function Header({
             <input
               type="text"
               placeholder="Search cases, customers..."
-              className="w-full bg-[#080D15] border border-[#1A2333] hover:border-slate-700 focus:border-cyan-500/50 rounded-lg pl-8 pr-8 sm:pr-12 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-all"
+              className="w-full bg-[#080D15] border border-[#1A2333] hover:border-slate-700 focus:border-cyan-500/50 rounded-lg pl-8 pr-8 sm:pr-12 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none transition-all font-mono"
             />
             <kbd className="hidden sm:inline-block absolute right-2.5 top-1/2 -translate-y-1/2 text-[9px] font-mono text-slate-400 bg-[#0F1622] px-1.5 py-0.5 rounded border border-[#1E293B]">
               ⌘K
@@ -117,11 +231,94 @@ export function Header({
 
         {/* Right: Date Range Dropdown + Reset + Refresh + System Status */}
         <div className="flex items-center gap-1.5 sm:gap-3">
-          {/* Date Filter */}
-          <div className="hidden md:flex items-center gap-1.5 bg-[#080D15] border border-[#1A2333] hover:border-slate-700 text-slate-300 text-xs px-2.5 py-1.5 rounded-lg transition cursor-pointer select-none">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" />
-            <span className="font-medium text-[11px]">{dateRange}</span>
-            <ChevronDown className="w-3 h-3 text-slate-400 ml-0.5" />
+          {/* Functional Precision Date Filter Dropdown */}
+          <div className="relative" ref={dateMenuRef}>
+            <button
+              type="button"
+              onClick={() => {
+                setShowDateRangePopover(!showDateRangePopover);
+                setShowStatusPopover(false);
+              }}
+              className={`hidden md:flex items-center gap-2 bg-[#080D15] hover:bg-[#0E1524] text-xs px-2.5 py-1.5 rounded-lg border transition shadow-sm select-none ${
+                showDateRangePopover
+                  ? "border-cyan-400/80 text-white shadow-[0_0_12px_rgba(34,211,238,0.25)]"
+                  : "border-[#1A2333] hover:border-slate-700 text-slate-200"
+              }`}
+              title="Select analytical time horizon"
+            >
+              <Calendar className="w-3.5 h-3.5 text-cyan-400" />
+              <span className="font-semibold text-[11px] font-mono tracking-tight">{activeDateRange}</span>
+              <ChevronDown
+                className={`w-3 h-3 text-slate-400 ml-0.5 transition-transform duration-200 ${
+                  showDateRangePopover ? "rotate-180 text-cyan-400" : ""
+                }`}
+              />
+            </button>
+
+            {/* Date Range Precision Popover */}
+            {showDateRangePopover && (
+              <div className="absolute right-0 mt-2 w-72 bg-[#080D15] border border-[#1E293B] rounded-xl p-2.5 shadow-2xl z-50 text-xs space-y-2 animate-fadeIn backdrop-blur-xl">
+                {/* Popover Header */}
+                <div className="flex items-center justify-between pb-2 border-b border-[#1E293B] px-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
+                    <Clock className="w-3 h-3 text-cyan-400" />
+                    TIME HORIZON
+                  </span>
+                  <span className="text-[9px] font-mono font-bold text-cyan-300 bg-cyan-950/80 border border-cyan-500/30 px-1.5 py-0.2 rounded">
+                    ACTIVE
+                  </span>
+                </div>
+
+                {/* Current Active Date Span Display */}
+                <div className="bg-[#05080E] border border-[#151E2E] rounded-lg px-2.5 py-1.5">
+                  <div className="text-[9px] text-slate-500 uppercase tracking-wider font-mono">SELECTED SPAN</div>
+                  <div className="text-[11px] font-mono font-semibold text-white truncate">
+                    {getFormattedSpan(activeDateRange)}
+                  </div>
+                </div>
+
+                {/* Preset Options */}
+                <div className="space-y-1 pt-1">
+                  {DATE_RANGE_PRESETS.map((preset) => {
+                    const isSelected = activeDateRange === preset.label;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => handleSelectDateRange(preset.label)}
+                        className={`w-full text-left p-2 rounded-lg transition-all flex items-start justify-between gap-2 group ${
+                          isSelected
+                            ? "bg-cyan-950/30 border border-cyan-500/40 text-white"
+                            : "hover:bg-[#0E1524] border border-transparent text-slate-300"
+                        }`}
+                      >
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5">
+                            <span
+                              className={`text-xs font-bold font-mono ${
+                                isSelected ? "text-cyan-300" : "text-white group-hover:text-cyan-400"
+                              }`}
+                            >
+                              {preset.label}
+                            </span>
+                            <span className="text-[9px] px-1 py-0.2 rounded bg-[#0F1622] border border-[#1E293B] text-slate-400 font-mono">
+                              {preset.badge}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-slate-400 truncate mt-0.5">{preset.sublabel}</div>
+                        </div>
+
+                        {isSelected && (
+                          <div className="w-4 h-4 rounded-full bg-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0 mt-0.5">
+                            <Check className="w-3 h-3 stroke-[2.5]" />
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Reset Demo Button */}
@@ -144,9 +341,12 @@ export function Header({
           </button>
 
           {/* System Status Dropdown Pill */}
-          <div className="relative">
+          <div className="relative" ref={statusMenuRef}>
             <button
-              onClick={() => setShowStatusPopover(!showStatusPopover)}
+              onClick={() => {
+                setShowStatusPopover(!showStatusPopover);
+                setShowDateRangePopover(false);
+              }}
               className="flex items-center gap-1.5 bg-[#080D15] border border-emerald-500/30 hover:border-emerald-500/50 text-emerald-400 px-2 sm:px-2.5 py-1.5 rounded-lg text-[11px] font-semibold transition"
             >
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse status-dot-active" />

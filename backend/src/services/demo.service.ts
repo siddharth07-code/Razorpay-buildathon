@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma";
 import { recoveryOrchestrator } from "./orchestrator.service";
+import { langGraphOrchestrator } from "./langgraph-orchestrator.service";
 import { toPaise, fromPaise, serializeBigInt } from "../utils/money";
 import {
   PaymentStatus,
@@ -403,22 +404,10 @@ export class DemoService {
         }))!;
       }
 
-      // 2. Step 2: Risk & Root Cause Analysis
-      const analysis = await recoveryOrchestrator.analyzeCase(targetCase.id);
+      // Execute REAL LangGraph StateGraph Workflow with Supervised ML & Policy Gate
+      const graphResult = await langGraphOrchestrator.runRecoveryWorkflow(targetCase.id);
 
-      // 3. Step 3: Strategy Selection
-      const strategy = await recoveryOrchestrator.selectRecoveryAction(targetCase.id);
-
-      // 4. Step 4: Policy Validation
-      const policy = await recoveryOrchestrator.validatePolicy(targetCase.id);
-
-      // 5. Step 5: Execution Boundary
-      let execution: any = null;
-      if (!policy.requiresHumanApproval && policy.allowed) {
-        execution = await recoveryOrchestrator.executeRecoveryAction(targetCase.id);
-      }
-
-      // Fetch updated case state
+      // Fetch updated case state from PostgreSQL
       const finalCase = await prisma.recoveryCase.findUnique({
         where: { id: targetCase.id },
         include: { customer: true, payment: true, recoveryAttempts: { take: 1, orderBy: { createdAt: "desc" } } },
@@ -427,6 +416,7 @@ export class DemoService {
       return serializeBigInt({
         success: true,
         mode: "RAZORPAY_SANDBOX",
+        orchestrationEngine: "LANGGRAPH_STATEGRAPH_V1",
         demoScenario: `${customerName} ₹${amountRupees.toLocaleString("en-IN")} Live Recovery Flow`,
         caseId: finalCase!.id,
         caseNumber: finalCase!.caseNumber,
@@ -436,11 +426,30 @@ export class DemoService {
         currentStep: finalCase!.currentStep,
         paymentLinkUrl: finalCase!.paymentLinkUrl,
         razorpayPaymentLinkId: finalCase!.razorpayPaymentLinkId,
-        risk: analysis.risk,
-        diagnosis: analysis.diagnosis,
-        strategy,
-        policy,
-        execution,
+        graphResult,
+        risk: {
+          riskScore: finalCase!.riskScore,
+          recoverabilityScore: finalCase!.recoverabilityScore,
+          priority: finalCase!.priority,
+          recoveryProbability: graphResult.state?.recoveryProbability,
+        },
+        diagnosis: {
+          rootCause: finalCase!.rootCause,
+          explanation: finalCase!.rootCauseDetails,
+        },
+        strategy: {
+          action: finalCase!.selectedAction || finalCase!.recommendedAction,
+        },
+        policy: {
+          allowed: !graphResult.requiresHumanApproval,
+          requiresHumanApproval: graphResult.requiresHumanApproval || false,
+          reason: graphResult.state?.policyReason || "Automated policy evaluation",
+        },
+        execution: {
+          success: graphResult.state?.executionStatus === "SUCCESS",
+          paymentLinkUrl: finalCase!.paymentLinkUrl,
+          razorpayReference: finalCase!.razorpayPaymentLinkId,
+        },
         instructions: "To complete the test recovery, open Razorpay Checkout in Test Mode and complete checkout.",
       });
     } catch (err: any) {

@@ -1,0 +1,35 @@
+{
+  "modelName": "VIREON Recovery Model",
+  "modelVersion": "v1",
+  "algorithm": "LogisticRegression",
+  "features": {
+    "numerical": [
+      "amount_at_risk",
+      "customer_ltv",
+      "retry_count",
+      "days_overdue",
+      "previous_successful_payments",
+      "previous_recovery_attempts",
+      "customer_tenure_days"
+    ],
+    "categorical": [
+      "failure_type",
+      "payment_method"
+    ],
+    "totalFeatureCount": 9
+  },
+  "dataset": {
+    "path": "ml/data/recovery_training.csv",
+    "totalSamples": 450,
+    "trainSamples": 360,
+    "testSamples": 90,
+    "isSyntheticDemonstration": true
+  },
+  "metrics": {
+    "accuracy": 0.7444,
+    "precision": 0.8082,
+    "recall": 0.8676,
+    "f1": 0.8369,
+    "rocAuc": 0.7139
+  }
+}

@@ -2,8 +2,12 @@ import { prisma } from "../config/prisma";
 import { fromPaise, serializeBigInt } from "../utils/money";
 
 export class DashboardService {
-  public async getSummaryMetrics() {
+  public async getSummaryMetrics(days?: number) {
     try {
+      const dateFilter = days && days > 0
+        ? { createdAt: { gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000) } }
+        : {};
+
       const [
         totalCases,
         activeCases,
@@ -15,9 +19,10 @@ export class DashboardService {
         cases,
         recentAuditEvents,
       ] = await Promise.all([
-        prisma.recoveryCase.count(),
+        prisma.recoveryCase.count({ where: dateFilter }),
         prisma.recoveryCase.count({
           where: {
+            ...dateFilter,
             status: {
               in: [
                 "NEW",
@@ -35,10 +40,11 @@ export class DashboardService {
           },
         }),
         prisma.recoveryCase.count({
-          where: { status: "RECOVERED" },
+          where: { ...dateFilter, status: "RECOVERED" },
         }),
         prisma.recoveryCase.count({
           where: {
+            ...dateFilter,
             status: {
               in: [
                 "NEW",
@@ -58,6 +64,7 @@ export class DashboardService {
         }),
         prisma.recoveryCase.count({
           where: {
+            ...dateFilter,
             OR: [
               { status: { in: ["AWAITING_APPROVAL", "PENDING_APPROVAL"] } },
               {
@@ -81,6 +88,7 @@ export class DashboardService {
             failedPayments: { gt: 0 },
             recoveryCases: {
               some: {
+                ...dateFilter,
                 status: {
                   in: [
                     "NEW",
@@ -100,6 +108,7 @@ export class DashboardService {
           },
         }),
         prisma.recoveryCase.aggregate({
+          where: dateFilter,
           _sum: {
             amountAtRisk: true,
             recoverableAmount: true,
@@ -108,10 +117,12 @@ export class DashboardService {
           },
         }),
         prisma.recoveryCase.findMany({
+          where: dateFilter,
           include: { customer: true, payment: true, subscription: true, order: true, invoice: true },
           orderBy: { createdAt: "desc" },
         }),
         prisma.auditEvent.findMany({
+          where: days && days > 0 ? { timestamp: { gte: new Date(Date.now() - days * 24 * 60 * 60 * 1000) } } : {},
           take: 15,
           orderBy: { timestamp: "desc" },
           include: { recoveryCase: true },
@@ -122,7 +133,7 @@ export class DashboardService {
         _sum: {
           recoveredAmount: true,
         },
-        where: { status: "RECOVERED" },
+        where: { ...dateFilter, status: "RECOVERED" },
       });
 
       const totalRevenueAtRisk = fromPaise(aggregations._sum.amountAtRisk || 0n);

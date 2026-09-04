@@ -14,6 +14,7 @@ import {
   TrendingUp,
   X,
 } from "lucide-react";
+import { VireonLogo } from "@/components/brand/VireonLogo";
 
 export function Sidebar() {
   const pathname = usePathname();
@@ -44,7 +45,7 @@ export function Sidebar() {
       icon: LayoutDashboard,
     },
     {
-      name: "Recovery Cases",
+      name: "Cases Queue",
       href: "/cases",
       icon: ShieldAlert,
     },
@@ -93,31 +94,12 @@ export function Sidebar() {
         {/* VIREON Brand Header */}
         <div className="px-2 pt-1 pb-1 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-3 group">
-            {/* Stylized Hex/V Monogram Icon */}
-            <div className="relative w-8 h-8 rounded-lg bg-gradient-to-br from-blue-600 via-indigo-600 to-cyan-500 p-[1px] shadow-lg shadow-blue-900/30 group-hover:shadow-cyan-500/20 transition-all">
-              <div className="w-full h-full bg-[#080D15] rounded-[7px] flex items-center justify-center relative overflow-hidden">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  className="w-4 h-4 text-cyan-400 drop-shadow-[0_0_6px_rgba(34,211,238,0.6)]"
-                  stroke="currentColor"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M4 4l8 16 8-16" />
-                </svg>
-              </div>
-            </div>
-
-            <div className="flex flex-col">
-              <span className="font-extrabold text-[15px] tracking-wider text-white uppercase leading-none">
-                VIREON
-              </span>
-              <span className="text-[8px] font-semibold tracking-widest text-slate-400 uppercase mt-1 leading-none">
-                REVENUE INTELLIGENCE
-              </span>
-            </div>
+            <VireonLogo
+              variant="full"
+              size="sm"
+              showTagline={true}
+              animated={true}
+            />
           </Link>
 
           {/* Close Button on Mobile Drawer */}
@@ -235,51 +217,6 @@ export function Sidebar() {
               );
             })}
           </div>
-        </div>
-      </div>
-
-      {/* Sidebar Footer: System Status & Version */}
-      <div className="p-3 border-t border-[#151E2E] bg-[#060A10]/90 space-y-2.5 text-[11px]">
-        <div className="space-y-1.5 px-1 pt-1">
-          <div className="flex items-center gap-1.5 text-slate-400 text-[10px] font-semibold uppercase tracking-wider mb-2">
-            <span>SYSTEM STATUS</span>
-          </div>
-
-          <div className="flex items-center justify-between text-[10px]">
-            <span className="text-slate-400 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              All Systems Operational
-            </span>
-          </div>
-
-          <div className="space-y-1 pt-1 border-t border-[#151E2E]/60 text-[10px] text-slate-400 font-mono">
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">PostgreSQL</span>
-              <span className="text-emerald-400 font-medium">Connected</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Razorpay</span>
-              <span className="text-emerald-400 font-medium">Sandbox</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">LangGraph</span>
-              <span className="text-violet-400 font-medium">Online</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">SSE Stream</span>
-              <span className="text-cyan-400 font-medium">Streaming</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-slate-400">Gateway</span>
-              <span className="text-emerald-400 font-medium">Online</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Version */}
-        <div className="pt-2 border-t border-[#151E2E] px-1 flex items-center justify-between text-[9px] text-slate-400">
-          <span>© 2026 VIREON</span>
-          <span className="font-mono">v2.4.0</span>
         </div>
       </div>
     </div>

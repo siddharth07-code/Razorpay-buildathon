@@ -23,6 +23,7 @@ import {
   Send,
 } from "lucide-react";
 import { RazorpayCheckoutButton } from "@/components/payment/RazorpayCheckoutButton";
+import { LiveRecoveryOrchestration } from "@/components/dashboard/LiveRecoveryOrchestration";
 
 export default function StandaloneCasePage() {
   const params = useParams();
@@ -376,6 +377,14 @@ export default function StandaloneCasePage() {
 
         {/* Right Column: Actions & Timeline */}
         <div className="space-y-5">
+          {/* Real-time LangGraph Live Orchestration */}
+          <LiveRecoveryOrchestration
+            caseId={caseItem.id}
+            caseNumber={caseItem.caseNumber}
+            amountRupees={caseItem.amount}
+            onWorkflowUpdated={loadCase}
+          />
+
           {/* Action Bench / Terminal Status */}
           {/* Action Availability Interventions */}
           {(() => {

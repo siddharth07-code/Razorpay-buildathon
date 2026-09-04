@@ -62,8 +62,15 @@ class InMemoryRepository {
   }
 
   // --- Metrics ---
-  public getMetrics(): DashboardMetrics {
-    const allCases = this.data.recoveryCases;
+  public getMetrics(days?: number): DashboardMetrics {
+    let allCases = this.data.recoveryCases;
+    if (days && days > 0) {
+      const threshold = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
+      const filtered = allCases.filter((c) => (c.createdAt || c.updatedAt || "") >= threshold);
+      if (filtered.length > 0) {
+        allCases = filtered;
+      }
+    }
     const activeCases = allCases.filter(
       (c) => c.status === "OPEN" || c.status === "IN_PROGRESS" || c.status === "ANALYZING"
     );

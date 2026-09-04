@@ -1,15 +1,39 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
+import GhostFibers from "@/components/GhostFibers";
+import { VireonMark } from "@/components/brand/VireonLogo";
 
 export function HolographicVireonVisual() {
   return (
-    <div className="relative w-full h-full min-h-[220px] sm:min-h-[260px] flex items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-[#080D15] via-[#060A10] to-[#04060A] border border-[#151E2E] p-4 group">
-      {/* Background Radial Ambient Glow */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(59,130,246,0.15)_0%,_rgba(34,211,238,0.08)_40%,_transparent_75%)] pointer-events-none animate-pulse-glow" />
+    <div className="relative w-full h-full min-h-[240px] sm:min-h-[280px] flex items-center justify-center overflow-hidden rounded-2xl bg-[#04060A] border border-[#151E2E] p-4 group shadow-xl">
+      {/* Background GhostFibers WebGL Neural Shader from React Bits */}
+      <div className="absolute inset-0 overflow-hidden rounded-2xl opacity-75 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
+        <GhostFibers
+          lineColor="#071224"
+          glowColor="#00d8ff"
+          speed={0.18}
+          scale={2.2}
+          layers={6}
+          waveAmplitude={0.015}
+          waveFrequency={3}
+          waveSpeed={-0.6}
+          lineSharpness={16}
+          glowIntensity={1.8}
+          brightness={2}
+          blueBoost={1.4}
+          vignette={0.65}
+          grain={0.04}
+          dpr={1.5}
+        />
+      </div>
+
+      {/* Radial Vignette & Depth Mask */}
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_rgba(4,6,10,0.15)_0%,_rgba(4,6,10,0.65)_75%,_rgba(4,6,10,0.92)_100%)] pointer-events-none" />
 
       {/* Holographic Stage Container */}
-      <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center select-none">
+      <div className="relative w-56 h-56 sm:w-64 sm:h-64 flex items-center justify-center select-none z-10">
         {/* Floor Hologram Pedestal / Rings */}
         <div className="absolute bottom-4 sm:bottom-6 w-44 sm:w-52 h-14 sm:h-16 rounded-[100%] border border-cyan-500/30 bg-cyan-950/20 shadow-[0_0_30px_rgba(34,211,238,0.25)] flex items-center justify-center transform -rotate-x-60">
           {/* Inner Ring 1 */}
@@ -75,43 +99,10 @@ export function HolographicVireonVisual() {
             {/* Subtle Light Sweep Sheen */}
             <div className="absolute inset-0 w-[200%] h-full bg-gradient-to-r from-transparent via-white/15 to-transparent pointer-events-none animate-light-sweep" />
 
-            {/* Holographic VIREON Geometric V Core Monogram */}
-            <svg
-              viewBox="0 0 48 48"
-              fill="none"
-              className="w-12 h-12 sm:w-14 sm:h-14 text-cyan-300 drop-shadow-[0_0_14px_rgba(34,211,238,0.95)] z-10"
-            >
-              {/* Outer Hex Path */}
-              <path
-                d="M24 4L42 14V34L24 44L6 34V14L24 4Z"
-                stroke="url(#vireon-grad)"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              {/* Central Precision V Monogram */}
-              <path
-                d="M16 16L24 32L32 16"
-                stroke="#FFFFFF"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <path
-                d="M20 16L24 25L28 16"
-                stroke="#22D3EE"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              <defs>
-                <linearGradient id="vireon-grad" x1="6" y1="4" x2="42" y2="44" gradientUnits="userSpaceOnUse">
-                  <stop stopColor="#3B82F6" />
-                  <stop offset="0.5" stopColor="#22D3EE" />
-                  <stop offset="1" stopColor="#8B5CF6" />
-                </linearGradient>
-              </defs>
-            </svg>
+            {/* Holographic VIREON Official 3D Ribbon V Mark Core */}
+            <div className="relative z-10 drop-shadow-[0_0_18px_rgba(34,211,238,0.9)]">
+              <VireonMark size="lg" animated={false} />
+            </div>
 
             {/* Corner Precision Nodes */}
             <span className="absolute -top-1 -left-1 w-2 h-2 rounded-sm bg-cyan-400 shadow-[0_0_6px_#22D3EE]" />
@@ -129,12 +120,18 @@ export function HolographicVireonVisual() {
       </div>
 
       {/* Telemetry Caption Bar */}
-      <div className="absolute bottom-2.5 left-4 right-4 flex items-center justify-between text-[9px] font-mono text-slate-400 border-t border-[#151E2E]/60 pt-2">
+      <div className="absolute bottom-2.5 left-4 right-4 flex items-center justify-between text-[9px] font-mono text-slate-400 border-t border-[#151E2E]/80 pt-2 z-20 backdrop-blur-[2px]">
         <span className="flex items-center gap-1.5 text-cyan-400 font-semibold tracking-wider">
           <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse status-dot-active" />
-          REVENUE ENGINE
+          GHOST FIBERS CORE
         </span>
-        <span className="text-slate-400 tracking-wider">ORCHESTRATION LAYER</span>
+        <Link
+          href="/ghost-fibers"
+          className="text-cyan-400/80 hover:text-cyan-300 font-bold transition flex items-center gap-1 group/btn pointer-events-auto"
+        >
+          <span>INTERACTIVE</span>
+          <span className="group-hover/btn:translate-x-0.5 transition-transform">→</span>
+        </Link>
       </div>
     </div>
   );
