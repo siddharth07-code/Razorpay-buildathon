@@ -49,12 +49,6 @@ export default function VireonLandingPage() {
             Cases
           </Link>
           <Link
-            href="/ghost-fibers"
-            className="text-xs text-cyan-400 hover:text-cyan-300 font-mono font-medium transition hidden md:inline"
-          >
-            GhostFibers
-          </Link>
-          <Link
             href="/"
             className="flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold px-3.5 sm:px-4 py-2 rounded-xl shadow-lg shadow-blue-900/30 transition hover:-translate-y-0.5 active:scale-[0.98] group"
           >
@@ -505,16 +499,6 @@ export default function VireonLandingPage() {
                 <div className="text-[11px] text-slate-400">
                   GPU Shader • 8 Concurrent Wave Layers • WebGL 2.0
                 </div>
-              </div>
-
-              <div className="absolute top-4 right-4 z-10">
-                <Link
-                  href="/ghost-fibers"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#080D15]/90 backdrop-blur-md border border-cyan-500/40 text-cyan-300 text-xs font-mono font-semibold hover:bg-cyan-950/50 hover:border-cyan-400 transition shadow-lg"
-                >
-                  <span>Interactive Controls &amp; Palettes</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
               </div>
             </div>
           </div>

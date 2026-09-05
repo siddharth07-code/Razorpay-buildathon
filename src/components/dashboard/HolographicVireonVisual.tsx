@@ -1,14 +1,13 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
 import GhostFibers from "@/components/GhostFibers";
 import { VireonMark } from "@/components/brand/VireonLogo";
 
 export function HolographicVireonVisual() {
   return (
     <div className="relative w-full h-full min-h-[240px] sm:min-h-[280px] flex items-center justify-center overflow-hidden rounded-2xl bg-[#04060A] border border-[#151E2E] p-4 group shadow-xl">
-      {/* Background GhostFibers WebGL Neural Shader from React Bits */}
+      {/* Background WebGL Neural Shader Backdrop */}
       <div className="absolute inset-0 overflow-hidden rounded-2xl opacity-75 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none">
         <GhostFibers
           lineColor="#071224"
@@ -123,15 +122,11 @@ export function HolographicVireonVisual() {
       <div className="absolute bottom-2.5 left-4 right-4 flex items-center justify-between text-[9px] font-mono text-slate-400 border-t border-[#151E2E]/80 pt-2 z-20 backdrop-blur-[2px]">
         <span className="flex items-center gap-1.5 text-cyan-400 font-semibold tracking-wider">
           <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse status-dot-active" />
-          GHOST FIBERS CORE
+          VIREON TELEMETRY CORE
         </span>
-        <Link
-          href="/ghost-fibers"
-          className="text-cyan-400/80 hover:text-cyan-300 font-bold transition flex items-center gap-1 group/btn pointer-events-auto"
-        >
-          <span>INTERACTIVE</span>
-          <span className="group-hover/btn:translate-x-0.5 transition-transform">→</span>
-        </Link>
+        <span className="text-[10px] text-slate-500 font-mono">
+          AUTONOMOUS RECOVERY
+        </span>
       </div>
     </div>
   );
