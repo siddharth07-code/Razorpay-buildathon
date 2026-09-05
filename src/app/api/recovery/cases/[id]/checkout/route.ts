@@ -91,61 +91,44 @@ export async function POST(
     }
 
     // 4. Create or reuse Razorpay Order via ExecutionService
-    const rawOrderId = caseRecord?.razorpayOrderId || repoCase?.razorpayOrderId;
-    const isSuspicious =
-      !rawOrderId ||
-      !rawOrderId.startsWith("order_") ||
-      rawOrderId.startsWith("order_demo_") ||
-      rawOrderId.startsWith("order_mock_") ||
-      rawOrderId.startsWith("order_sandbox_") ||
-      rawOrderId.startsWith("order_simulated_") ||
-      rawOrderId.startsWith("order_fake_") ||
-      rawOrderId.includes("sandbox") ||
-      rawOrderId.includes("demo") ||
-      rawOrderId.includes("mock") ||
-      rawOrderId.includes("simulated") ||
-      rawOrderId === "order_rzp_sandbox" ||
-      rawOrderId === "pay_rzp_sandbox";
-
-    let orderId = isSuspicious ? null : rawOrderId;
-    let isExisting = Boolean(orderId);
-
     const keyId =
       appConfig.razorpay.keyId ||
       process.env.RAZORPAY_KEY_ID ||
-      "rzp_test_vireon_demo";
+      "";
 
-    if (!orderId) {
-      if (isDbCase && caseRecord) {
-        const orderResult = await executionService.createOrReuseCheckoutOrder({
-          caseId,
-          amountAtRisk: amountAtRiskPaise,
-          customer: {
-            name: customer?.name || "Customer",
-            email: customer?.email || "",
-            phone: customer?.phone || "",
-          },
+    let orderId: string;
+    let isExisting: boolean;
+
+    if (isDbCase && caseRecord) {
+      const orderResult = await executionService.createOrReuseCheckoutOrder({
+        caseId,
+        amountAtRisk: amountAtRiskPaise,
+        customer: {
+          name: customer?.name || "Customer",
+          email: customer?.email || "",
+          phone: customer?.phone || "",
+        },
+        caseNumber,
+        description: `Revenue Recovery - ${caseNumber}`,
+      });
+      orderId = orderResult.orderId;
+      isExisting = orderResult.isExisting;
+    } else {
+      // In-memory fallback
+      const razorpay = await getRazorpayService();
+      const amountRupees = Number(amountAtRiskPaise / 100n);
+      const order = await razorpay.createOrder({
+        amount: amountRupees,
+        currency: "INR",
+        receipt: `chk_${caseId.substring(0, 8)}_${Date.now()}`,
+        notes: {
+          vireon_case_id: caseId,
           caseNumber,
-          description: `Revenue Recovery - ${caseNumber}`,
-        });
-        orderId = orderResult.orderId;
-        isExisting = orderResult.isExisting;
-      } else {
-        // In-memory fallback
-        const razorpay = await getRazorpayService();
-        const amountRupees = Number(amountAtRiskPaise / 100n);
-        const order = await razorpay.createOrder({
-          amount: amountRupees,
-          currency: "INR",
-          receipt: `chk_${caseId.substring(0, 8)}`,
-          notes: {
-            vireon_case_id: caseId,
-            caseNumber,
-          },
-        });
-        orderId = order.id;
-        if (repoCase) repoCase.razorpayOrderId = orderId;
-      }
+        },
+      });
+      orderId = order.id;
+      isExisting = false;
+      if (repoCase) repoCase.razorpayOrderId = orderId;
     }
 
     // 5. Return strictly safe public checkout data (Paise integer precision)

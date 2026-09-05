@@ -4576,19 +4576,31 @@ export async function runOrchestratorTestSuite(): Promise<{
         customerId: cust!.id,
         amountAtRisk: 2500000n,
         status: RecoveryCaseStatus.AWAITING_PAYMENT,
-        razorpayOrderId: "order_existing_test_189",
         rootCauseDetails: "Existing order reuse test 189",
       },
     });
 
-    const orderRes = await executionService.createOrReuseCheckoutOrder({
+    const orderRes1 = await executionService.createOrReuseCheckoutOrder({
       caseId: case189.id,
       amountAtRisk: 2500000n,
       caseNumber: case189.caseNumber,
     });
 
-    const passed = orderRes.orderId === "order_existing_test_189" && orderRes.isExisting === true;
-    record(189, "Existing Razorpay order reuse", "Razorpay Checkout Safety", passed, `Existing order order_existing_test_189 was reused with zero duplicate order creation`);
+    const orderRes2 = await executionService.createOrReuseCheckoutOrder({
+      caseId: case189.id,
+      amountAtRisk: 2500000n,
+      caseNumber: case189.caseNumber,
+    });
+
+    const passed =
+      orderRes2.orderId === orderRes1.orderId && orderRes2.isExisting === true;
+    record(
+      189,
+      "Existing Razorpay order reuse",
+      "Razorpay Checkout Safety",
+      passed,
+      `Active unpaid order ${orderRes1.orderId} was verified and reused with zero duplicate order creation`
+    );
   } catch (err: any) {
     record(189, "Existing Razorpay order reuse", "Razorpay Checkout Safety", false, err.message);
   }

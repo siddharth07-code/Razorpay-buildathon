@@ -289,13 +289,28 @@ export class ExecutionService {
         oid === "pay_rzp_sandbox";
 
       if (!isSuspicious) {
-        return {
-          orderId: oid,
-          amountPaise: Number(existingCase.amountAtRisk || amountAtRisk),
-          currency: "INR",
-          keyId: process.env.RAZORPAY_KEY_ID || "",
-          isExisting: true,
-        };
+        try {
+          const fetchedOrder = await razorpay.fetchOrder(oid);
+          // Only reuse if the order is valid, unpaid, and has amount_due > 0
+          if (
+            fetchedOrder &&
+            fetchedOrder.status !== "paid" &&
+            (fetchedOrder.amount_due ?? fetchedOrder.amount) > 0
+          ) {
+            return {
+              orderId: oid,
+              amountPaise: Number(existingCase.amountAtRisk || amountAtRisk),
+              currency: "INR",
+              keyId: process.env.RAZORPAY_KEY_ID || "",
+              isExisting: true,
+            };
+          }
+          console.warn(
+            `[ExecutionService] Existing order ${oid} is closed or settled (status=${fetchedOrder?.status}, amount_due=${fetchedOrder?.amount_due}). Creating fresh active Razorpay order.`
+          );
+        } catch (fetchErr: any) {
+          console.warn(`[ExecutionService] Failed to verify existing order ${oid}:`, fetchErr?.message);
+        }
       }
     }
 
@@ -351,11 +366,12 @@ export class ExecutionService {
       }
     }
 
-    // 5. Store razorpayOrderId on the recovery case in PostgreSQL
+    // 5. Store razorpayOrderId on the recovery case in PostgreSQL and reset stale payment ID
     await prisma.recoveryCase.update({
       where: { id: caseId },
       data: {
         razorpayOrderId: orderResponse.id,
+        razorpayPaymentId: null,
       },
     });
 

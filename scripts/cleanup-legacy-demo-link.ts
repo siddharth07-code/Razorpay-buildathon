@@ -52,51 +52,53 @@ async function main() {
     currentStep: targetCase.currentStep,
     paymentLinkUrl: targetCase.paymentLinkUrl,
     razorpayPaymentLinkId: targetCase.razorpayPaymentLinkId,
+    razorpayOrderId: targetCase.razorpayOrderId,
+    razorpayPaymentId: targetCase.razorpayPaymentId,
   });
 
-  const isFakeUrl =
-    targetCase.paymentLinkUrl &&
-    KNOWN_FAKE_URLS.some((fake) => targetCase.paymentLinkUrl?.includes(fake));
+  const hasStaleIdentifiers =
+    targetCase.razorpayOrderId !== null ||
+    targetCase.razorpayPaymentId !== null ||
+    targetCase.paymentLinkUrl !== null ||
+    targetCase.razorpayPaymentLinkId !== null ||
+    targetCase.status !== RecoveryCaseStatus.AWAITING_PAYMENT ||
+    targetCase.recoveredAmount > 0n ||
+    targetCase.recoveredAt !== null;
 
-  if (!isFakeUrl && targetCase.paymentLinkUrl === null) {
-    console.log("\n✅ REC-DEMO-005 already has paymentLinkUrl = null. No cleanup needed.");
+  if (!hasStaleIdentifiers) {
+    console.log("\n✅ REC-DEMO-005 is already in canonical clean state (all Razorpay IDs null, status AWAITING_PAYMENT). No cleanup needed.");
     return;
   }
 
-  if (targetCase.paymentLinkUrl && targetCase.paymentLinkUrl.startsWith("https://rzp.io/rzp/")) {
-    console.log(
-      `\nℹ️ REC-DEMO-005 currently has a REAL Razorpay-generated payment link: ${targetCase.paymentLinkUrl}`
-    );
-    console.log("Preserving real Razorpay record. If you wish to reset it to null for demo re-run,");
-    console.log("pass --force as a CLI argument.");
-    if (!process.argv.includes("--force")) {
-      return;
-    }
-  }
-
-  console.log("\nCleaning legacy placeholder link from REC-DEMO-005...");
+  console.log("\nCleaning stale Razorpay identifiers from REC-DEMO-005...");
 
   const updated = await prisma.recoveryCase.update({
     where: { id: targetCase.id },
     data: {
       paymentLinkUrl: null,
       razorpayPaymentLinkId: null,
+      razorpayOrderId: null,
+      razorpayPaymentId: null,
       status: RecoveryCaseStatus.AWAITING_PAYMENT,
       recoveredAmount: 0n,
       recoveredAt: null,
+      amountAtRisk: 6750000n,
       updatedAt: new Date(),
     },
     include: { customer: true },
   });
 
-  console.log("\n✅ Successfully updated REC-DEMO-005:");
+  console.log("\n✅ Successfully updated REC-DEMO-005 to canonical initial state:");
   console.log({
     id: updated.id,
     caseNumber: updated.caseNumber,
     customer: updated.customer?.name,
+    amountAtRisk: `${Number(updated.amountAtRisk) / 100} INR`,
     status: updated.status,
     paymentLinkUrl: updated.paymentLinkUrl,
     razorpayPaymentLinkId: updated.razorpayPaymentLinkId,
+    razorpayOrderId: updated.razorpayOrderId,
+    razorpayPaymentId: updated.razorpayPaymentId,
   });
   console.log("\nAudit events and payment history preserved intact.");
 }

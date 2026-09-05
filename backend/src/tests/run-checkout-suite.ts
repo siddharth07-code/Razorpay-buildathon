@@ -89,19 +89,32 @@ async function main() {
         customerId: cust.id,
         amountAtRisk: 2500000n,
         status: RecoveryCaseStatus.AWAITING_PAYMENT,
-        razorpayOrderId: "order_existing_test_189",
         rootCauseDetails: "Existing order reuse test 189",
       },
     });
 
-    const orderRes = await executionService.createOrReuseCheckoutOrder({
+    // First call creates a real active Razorpay order
+    const orderRes1 = await executionService.createOrReuseCheckoutOrder({
       caseId: case189.id,
       amountAtRisk: 2500000n,
       caseNumber: case189.caseNumber,
     });
 
-    const passed = orderRes.orderId === "order_existing_test_189" && orderRes.isExisting === true;
-    results.push({ id: 189, name: "Existing Razorpay order reuse", passed, message: "Existing order order_existing_test_189 was reused with zero duplicate order creation" });
+    // Second call should verify and reuse the active unpaid order
+    const orderRes2 = await executionService.createOrReuseCheckoutOrder({
+      caseId: case189.id,
+      amountAtRisk: 2500000n,
+      caseNumber: case189.caseNumber,
+    });
+
+    const passed =
+      orderRes2.orderId === orderRes1.orderId && orderRes2.isExisting === true;
+    results.push({
+      id: 189,
+      name: "Existing Razorpay order reuse",
+      passed,
+      message: `Active unpaid order ${orderRes1.orderId} was verified and reused with zero duplicate order creation`,
+    });
   } catch (err: any) {
     results.push({ id: 189, name: "Existing Razorpay order reuse", passed: false, message: err.message });
   }
