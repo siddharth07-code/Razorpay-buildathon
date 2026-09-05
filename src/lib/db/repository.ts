@@ -634,7 +634,7 @@ class InMemoryRepository {
         {
           id: `tl_sim_2_${Date.now()}`,
           timestamp: isoNow,
-          title: "RecoverAI Autonomous Intervention",
+          title: "VIREON Autonomous Intervention",
           description: `Classified as ${rootCause}. Formulated action: ${decisionType} (Confidence: ${Math.round(confidence * 100)}%).`,
           type: "AGENT_ANALYSIS",
           actor: "RECOVER_AI_AGENT",

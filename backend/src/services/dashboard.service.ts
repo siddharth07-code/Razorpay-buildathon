@@ -446,7 +446,7 @@ export class DashboardService {
           razorpay: { name: "Razorpay Sandbox", status: "connected", mode: "test", keyVerified: true },
           langgraph: { name: "LangGraph Multi-Agent", status: "initialized", nodesCount: 11, agentStatus: "ready" },
           sse: { name: "SSE Operations Console", status: "streaming", channel: "recovery_events", active: true },
-          backend: { name: "RecoverAI Gateway", status: "operational", version: "v2.0.0" },
+          backend: { name: "VIREON Gateway", status: "operational", version: "v2.0.0" },
         },
         recentActivity: [],
         funnel: [],

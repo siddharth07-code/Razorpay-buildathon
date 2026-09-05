@@ -154,7 +154,7 @@ export class RecoveryAgentOrchestrator {
         {
           id: `tl_2_${Date.now()}`,
           timestamp: now,
-          title: "RecoverAI Diagnosis & Strategy",
+          title: "VIREON Diagnosis & Strategy",
           description: `Diagnosed as ${diagnosis.rootCause} (${Math.round(diagnosis.confidence * 100)}% conf). Selected action: ${strategy.action}.`,
           type: "AGENT_ANALYSIS",
           actor: "RECOVER_AI_AGENT",

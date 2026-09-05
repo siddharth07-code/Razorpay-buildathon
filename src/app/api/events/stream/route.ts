@@ -6,7 +6,8 @@ export const revalidate = 0;
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const caseId = searchParams.get("caseId") || "";
-  const backendUrl = `http://localhost:5001/api/events/stream${caseId ? `?caseId=${caseId}` : ""}`;
+  const apiBase = process.env.BACKEND_URL || process.env.API_BASE_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001";
+  const backendUrl = `${apiBase.replace(/\/+$/, "")}/api/events/stream${caseId ? `?caseId=${caseId}` : ""}`;
 
   try {
     const backendRes = await fetch(backendUrl, {

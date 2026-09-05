@@ -361,7 +361,7 @@ export function getInitialSeedData(): SeedData {
         {
           id: "tl_002",
           timestamp: fourHoursAgo,
-          title: "RecoverAI Autonomous Case Generated",
+          title: "VIREON Autonomous Case Generated",
           description: "Assigned CRITICAL risk level. Root cause classified as clearing-hour balance drop.",
           type: "AGENT_ANALYSIS",
           actor: "RECOVER_AI_AGENT",

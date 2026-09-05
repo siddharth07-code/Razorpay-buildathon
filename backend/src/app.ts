@@ -5,9 +5,33 @@ import apiRoutes from "./routes";
 export const app = express();
 
 // Security and CORS
+const rawAllowedOrigins = [
+  process.env.FRONTEND_URL,
+  process.env.CORS_ORIGIN,
+  "http://localhost:3000",
+  "http://localhost:3001",
+  "http://localhost:5001",
+].filter(Boolean) as string[];
+
+const allowedOrigins = rawAllowedOrigins.flatMap((o) =>
+  o.includes(",") ? o.split(",").map((s) => s.trim()) : [o.trim()]
+);
+
 app.use(
   cors({
-    origin: "*",
+    origin: (origin, callback) => {
+      // Allow requests with no origin (mobile apps, server-to-server, curl, webhooks)
+      if (!origin) return callback(null, true);
+      if (allowedOrigins.includes("*") || allowedOrigins.length === 0) {
+        return callback(null, true);
+      }
+      if (allowedOrigins.some((allowed) => origin === allowed || origin.startsWith(allowed))) {
+        return callback(null, true);
+      }
+      // Demo safety: reflect origin to prevent hackathon presentation breakage across subdomains
+      return callback(null, true);
+    },
+    credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "x-razorpay-signature"],
   })

@@ -88,8 +88,9 @@ export async function validateCasePolicy(req: Request, res: Response) {
 export async function executeRecoveryCase(req: Request, res: Response) {
   try {
     const { id } = req.params;
-    const { forceExecute, actor } = req.body || {};
-    const result = await recoveryOrchestrator.executeRecoveryAction(id, { forceExecute, actor });
+    const { actor } = req.body || {};
+    // External callers cannot bypass policy checks; forceExecute is strictly reserved for authorized graph resumption
+    const result = await recoveryOrchestrator.executeRecoveryAction(id, { forceExecute: false, actor });
     res.json(serializeBigInt(result));
   } catch (error: any) {
     res.status(500).json({ error: error?.message || "Failed to execute recovery action" });

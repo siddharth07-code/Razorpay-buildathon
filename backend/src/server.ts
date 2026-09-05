@@ -16,8 +16,8 @@ async function startServer() {
     console.log(`[Database] Running in zero-downtime mock fallback provider.`);
   }
 
-  const server = app.listen(PORT, () => {
-    console.log(`[VIREON Server] ✓ Running at http://localhost:${PORT}`);
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    console.log(`[VIREON Server] ✓ Running at http://0.0.0.0:${PORT}`);
     console.log(`[VIREON API] Health check: http://localhost:${PORT}/api/health`);
     console.log(`[VIREON API] Dashboard summary: http://localhost:${PORT}/api/dashboard/summary`);
   });
@@ -29,7 +29,7 @@ async function startServer() {
   });
 
   process.on("SIGINT", () => {
-    console.log("[RecoverAI Server] SIGINT received. Shutting down...");
+    console.log("[VIREON Server] SIGINT received. Shutting down...");
     server.close(() => process.exit(0));
   });
 }

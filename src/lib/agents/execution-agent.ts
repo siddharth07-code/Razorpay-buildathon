@@ -40,7 +40,7 @@ export class ExecutionAgent {
       if (strategy.action === "CREATE_PAYMENT_LINK" || strategy.action === "SEND_PAYMENT_LINK") {
         const link = await razorpayService.createPaymentLink({
           amount: payment.amount,
-          description: `RecoverAI Recovery for Case #${caseId}`,
+          description: `VIREON Recovery for Case #${caseId}`,
           customer: {
             name: customer?.name || "Customer",
             email: customer?.email || "customer@example.in",

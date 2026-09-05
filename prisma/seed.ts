@@ -4,7 +4,7 @@ import { toPaise } from "../backend/src/utils/money";
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log("[Seed] Starting RecoverAI Database Seed (DEMO / TEST DATA)...");
+  console.log("[Seed] Starting VIREON Database Seed (DEMO / TEST DATA)...");
 
   // Clear existing records safely if any
   try {

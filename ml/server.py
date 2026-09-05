@@ -147,7 +147,7 @@ def predict(request: RecoveryPredictionRequest):
 
 if __name__ == "__main__":
     import uvicorn
-    port = int(os.environ.get("ML_PORT", 9000))
+    port = int(os.environ.get("PORT", os.environ.get("ML_PORT", 9000)))
     host = os.environ.get("ML_HOST", "0.0.0.0")
     print(f"[ML Server] Starting VIREON ML inference service on http://{host}:{port}")
     uvicorn.run("server:app", host=host, port=port, reload=False, app_dir=os.path.dirname(__file__))
