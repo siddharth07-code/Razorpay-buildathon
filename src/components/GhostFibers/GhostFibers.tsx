@@ -2,7 +2,6 @@
 
 import React, { useEffect, useRef } from 'react';
 import { Mesh, Program, Renderer, Triangle } from 'ogl';
-import './GhostFibers.css';
 
 export interface GhostFibersProps {
   lineColor?: string;
@@ -448,7 +447,7 @@ export const GhostFibers: React.FC<GhostFibersProps> = ({
     dpr
   ]);
 
-  return <div ref={containerRef} className={`ghost-fibers-container ${className}`.trim()} />;
+  return <div ref={containerRef} className={`relative w-full h-full overflow-hidden ghost-fibers-container ${className}`.trim()} />;
 };
 
 export default GhostFibers;
