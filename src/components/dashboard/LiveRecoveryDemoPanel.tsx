@@ -70,10 +70,7 @@ export function LiveRecoveryDemoPanel({
       const res = await fetch("/api/demo/recovery/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: 25000,
-          customerName: "Acme Technologies India Pvt Ltd",
-        }),
+        body: JSON.stringify({}),
       });
 
       if (res.ok) {
@@ -325,7 +322,7 @@ export function LiveRecoveryDemoPanel({
                 ₹{(demoData?.amountAtRiskRupees || 67500).toLocaleString("en-IN")}
               </div>
               <div className="text-[11px] text-slate-400">
-                Orion Media • Awaiting settlement
+                {demoData?.customerName || "Orion Media"} • Awaiting settlement
               </div>
             </div>
 
@@ -336,7 +333,7 @@ export function LiveRecoveryDemoPanel({
                   caseId={demoData.caseId}
                   caseNumber={demoData.caseNumber}
                   amount={demoData.amountAtRiskRupees || 67500}
-                  customerName="Orion Media"
+                  customerName={demoData.customerName || "Orion Media"}
                   onSuccess={() => {
                     setTimeout(() => {
                       setIsRecovered(true);

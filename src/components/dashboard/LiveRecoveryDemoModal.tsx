@@ -40,6 +40,7 @@ interface DemoResult {
   success: boolean;
   caseId: string;
   caseNumber: string;
+  customerName?: string;
   amountAtRiskRupees: number;
   amountAtRiskPaise: string | number;
   status: string;
@@ -177,10 +178,7 @@ export function LiveRecoveryDemoModal({
       const res = await fetch("/api/demo/recovery/start", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: 25000,
-          customerName: "Acme Technologies India Pvt Ltd",
-        }),
+        body: JSON.stringify({}),
       });
 
       if (!res.ok) {
@@ -577,7 +575,7 @@ export function LiveRecoveryDemoModal({
                     ₹{(demoData?.amountAtRiskRupees || 67500).toLocaleString("en-IN")}
                   </div>
                   <p className="text-xs text-slate-300 max-w-md mx-auto">
-                    Orion Media • Awaiting settlement. Complete test checkout in Sandbox mode.
+                    {demoData?.customerName || "Orion Media"} • Awaiting settlement. Complete test checkout in Sandbox mode.
                   </p>
                 </div>
 
@@ -589,7 +587,7 @@ export function LiveRecoveryDemoModal({
                         caseId={demoData.caseId}
                         caseNumber={demoData.caseNumber}
                         amount={demoData.amountAtRiskRupees || 67500}
-                        customerName="Orion Media"
+                        customerName={demoData.customerName || "Orion Media"}
                         onSuccess={() => {
                           setTimeout(() => {
                             setIsRecovered(true);

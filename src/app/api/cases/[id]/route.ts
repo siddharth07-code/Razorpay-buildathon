@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
 import { recoveryOrchestrator } from "../../../../../backend/src/services/orchestrator.service";
 import { executionService } from "../../../../../backend/src/services/execution.service";
+import { demoService } from "../../../../../backend/src/services/demo.service";
 import { prisma } from "../../../../../backend/src/config/prisma";
 import { fromPaise, serializeBigInt } from "../../../../../backend/src/utils/money";
 
@@ -22,6 +23,9 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
+    // Continuously rotate demo portfolio lifecycle
+    await demoService.rotateDemoPortfolioLifecycle();
+
     // 1. Try fetching from Supabase PostgreSQL via Prisma
     const recCase = await prisma.recoveryCase.findUnique({
       where: { id: params.id },

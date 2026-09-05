@@ -198,6 +198,82 @@ export class DemoService {
   ];
 
   /**
+   * Canonical actionable baseline states for rotating demo portfolio cases.
+   * When a case reaches RECOVERED and completes its demo retention window,
+   * it rotates back to these actionable configurations.
+   */
+  public static readonly DEMO_CASE_ROTATION_BASELINES: Record<
+    string,
+    {
+      status: RecoveryCaseStatus;
+      currentStep: RecoveryStep;
+      requiresHumanApproval: boolean;
+      recommendedAction: RecoveryAction;
+      selectedAction: RecoveryAction;
+    }
+  > = {
+    "REC-DEMO-001": {
+      status: RecoveryCaseStatus.AWAITING_PAYMENT,
+      currentStep: RecoveryStep.DYNAMIC_PAYMENT_LINK_SENT,
+      requiresHumanApproval: false,
+      recommendedAction: RecoveryAction.CREATE_PAYMENT_LINK,
+      selectedAction: RecoveryAction.CREATE_PAYMENT_LINK,
+    },
+    "REC-DEMO-002": {
+      status: RecoveryCaseStatus.AWAITING_PAYMENT,
+      currentStep: RecoveryStep.DYNAMIC_PAYMENT_LINK_SENT,
+      requiresHumanApproval: false,
+      recommendedAction: RecoveryAction.RETRY_SUBSCRIPTION,
+      selectedAction: RecoveryAction.RETRY_SUBSCRIPTION,
+    },
+    "REC-DEMO-003": {
+      status: RecoveryCaseStatus.ACTION_SELECTED,
+      currentStep: RecoveryStep.ROOT_CAUSE_ANALYSIS,
+      requiresHumanApproval: false,
+      recommendedAction: RecoveryAction.SEND_PAYMENT_LINK,
+      selectedAction: RecoveryAction.SEND_PAYMENT_LINK,
+    },
+    "REC-DEMO-004": {
+      status: RecoveryCaseStatus.AWAITING_APPROVAL,
+      currentStep: RecoveryStep.PENDING_HUMAN_APPROVAL,
+      requiresHumanApproval: true, // ₹2,75,000 >= ₹1L
+      recommendedAction: RecoveryAction.ESCALATE_TO_HUMAN,
+      selectedAction: RecoveryAction.ESCALATE_TO_HUMAN,
+    },
+    "REC-DEMO-005": {
+      status: RecoveryCaseStatus.AWAITING_PAYMENT,
+      currentStep: RecoveryStep.DYNAMIC_PAYMENT_LINK_SENT,
+      requiresHumanApproval: false, // Hero live Razorpay case ₹67,500
+      recommendedAction: RecoveryAction.CREATE_PAYMENT_LINK,
+      selectedAction: RecoveryAction.CREATE_PAYMENT_LINK,
+    },
+    "REC-DEMO-006": {
+      status: RecoveryCaseStatus.AWAITING_APPROVAL,
+      currentStep: RecoveryStep.PENDING_HUMAN_APPROVAL,
+      requiresHumanApproval: true, // ₹1,50,000 >= ₹1L
+      recommendedAction: RecoveryAction.CREATE_PROMISE_TO_PAY,
+      selectedAction: RecoveryAction.CREATE_PROMISE_TO_PAY,
+    },
+    "REC-DEMO-007": {
+      status: RecoveryCaseStatus.DIAGNOSED,
+      currentStep: RecoveryStep.ROOT_CAUSE_ANALYSIS,
+      requiresHumanApproval: false,
+      recommendedAction: RecoveryAction.REQUEST_PAYMENT_METHOD_UPDATE,
+      selectedAction: RecoveryAction.REQUEST_PAYMENT_METHOD_UPDATE,
+    },
+    "REC-DEMO-008": {
+      status: RecoveryCaseStatus.AWAITING_APPROVAL,
+      currentStep: RecoveryStep.PENDING_HUMAN_APPROVAL,
+      requiresHumanApproval: true, // ₹8,40,000 >= ₹1L
+      recommendedAction: RecoveryAction.ESCALATE_TO_HUMAN,
+      selectedAction: RecoveryAction.ESCALATE_TO_HUMAN,
+    },
+  };
+
+  private static isRotatingLifecycle = false;
+  private static lastLifecycleCheckMs = 0;
+
+  /**
    * Ensure the controlled 8-case Demo Portfolio exists deterministically
    */
   public async ensureDemoPortfolio() {
@@ -265,12 +341,8 @@ export class DemoService {
           data: {
             customerId: customer.id,
             paymentId: payment.id,
-            razorpayPaymentId: cfg.razorpayPaymentId,
             amountAtRisk: cfg.amountPaise,
             recoverableAmount: cfg.expectedRecoveryPaise,
-            recoveredAmount: cfg.recoveredAmountPaise,
-            status: cfg.status,
-            currentStep: cfg.currentStep,
             riskScore: cfg.riskScore,
             recoverabilityScore: cfg.recoverabilityScore,
             expectedRecoveryValue: cfg.expectedRecoveryPaise,
@@ -278,15 +350,6 @@ export class DemoService {
             priority: cfg.priority,
             rootCause: cfg.rootCause,
             rootCauseDetails: cfg.rootCauseDetails,
-            recommendedAction: cfg.recommendedAction,
-            selectedAction: cfg.selectedAction,
-            requiresHumanApproval: cfg.requiresHumanApproval,
-            paymentLinkUrl: cfg.paymentLinkUrl,
-            razorpayPaymentLinkId: cfg.paymentLinkUrl ? `plink_${cfg.caseNumber.toLowerCase()}` : null,
-            razorpayOrderId: null,
-            recoveredAt: cfg.status === "RECOVERED" ? new Date() : null,
-            retryCount: 0,
-            contactCount: 0,
           },
         });
       } else {
@@ -325,6 +388,176 @@ export class DemoService {
   }
 
   /**
+   * Rotate demo portfolio lifecycle:
+   * - Continuously checks for demo cases in RECOVERED status.
+   * - Keeps RECOVERED visible for a reasonable demo retention window (default: 180s / 3 minutes).
+   * - After retention expires, resets cases back to their actionable baseline states.
+   * - Clears transient fields (razorpayOrderId, razorpayPaymentId, paymentLinkUrl, etc.).
+   * - Preserves customer, amountAtRisk, root cause, ML metrics, and policy gates.
+   * - Thread-safe & idempotent for PostgreSQL with concurrency debouncing.
+   */
+  public async rotateDemoPortfolioLifecycle(options?: { force?: boolean; caseNumber?: string }) {
+    const now = Date.now();
+
+    // Debounce to prevent parallel requests from redundant DB writes
+    if (!options?.force && DemoService.isRotatingLifecycle) {
+      return { success: true, debounced: true, rotatedCount: 0 };
+    }
+    if (!options?.force && now - DemoService.lastLifecycleCheckMs < 3000) {
+      return { success: true, debounced: true, rotatedCount: 0 };
+    }
+
+    DemoService.isRotatingLifecycle = true;
+    DemoService.lastLifecycleCheckMs = now;
+
+    try {
+      const cooldownSeconds = parseInt(
+        process.env.DEMO_RECOVERY_COOLDOWN_SECONDS || "180",
+        10
+      );
+      const cooldownCutoff = new Date(now - cooldownSeconds * 1000);
+
+      const whereClause: any = {
+        caseNumber: options?.caseNumber
+          ? options.caseNumber
+          : { startsWith: "REC-DEMO-" },
+        status: RecoveryCaseStatus.RECOVERED,
+      };
+
+      if (!options?.force) {
+        whereClause.OR = [
+          { recoveredAt: { lte: cooldownCutoff } },
+          { recoveredAt: null },
+        ];
+      }
+
+      const expiredCases = await prisma.recoveryCase.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          caseNumber: true,
+          amountAtRisk: true,
+          recoveredAt: true,
+          status: true,
+        },
+      });
+
+      if (expiredCases.length === 0) {
+        return { success: true, rotatedCount: 0, cooldownSeconds };
+      }
+
+      const rotatedCases: string[] = [];
+
+      await prisma.$transaction(async (tx) => {
+        for (const exp of expiredCases) {
+          const baseline =
+            DemoService.DEMO_CASE_ROTATION_BASELINES[exp.caseNumber];
+          if (!baseline) continue;
+
+          // Atomic conditional update ensuring no race conditions
+          const updateResult = await tx.recoveryCase.updateMany({
+            where: {
+              id: exp.id,
+              status: RecoveryCaseStatus.RECOVERED,
+            },
+            data: {
+              status: baseline.status,
+              currentStep: baseline.currentStep,
+              requiresHumanApproval: baseline.requiresHumanApproval,
+              recommendedAction: baseline.recommendedAction,
+              selectedAction: baseline.selectedAction,
+              // Clear all transient recovery / payment fields
+              recoveredAmount: 0n,
+              recoveredAt: null,
+              razorpayOrderId: null,
+              razorpayPaymentId: null,
+              razorpayPaymentLinkId: null,
+              paymentLinkUrl: null,
+              retryCount: 0,
+              contactCount: 0,
+              actionsTakenCount: 0,
+              updatedAt: new Date(),
+            },
+          });
+
+          if (updateResult.count > 0) {
+            rotatedCases.push(exp.caseNumber);
+
+            // Record audit event for transparency
+            await tx.auditEvent.create({
+              data: {
+                caseId: exp.id,
+                eventType: "DEMO_PORTFOLIO_ROTATED",
+                actor: "VIREON_LIFECYCLE_ENGINE",
+                description: `Demo case ${exp.caseNumber} completed recovery retention window (${cooldownSeconds}s) and rotated back to ${baseline.status}`,
+                metadata: {
+                  caseNumber: exp.caseNumber,
+                  previousStatus: "RECOVERED",
+                  newStatus: baseline.status,
+                  cooldownSeconds,
+                  forced: Boolean(options?.force),
+                },
+              },
+            });
+          }
+        }
+      });
+
+      return {
+        success: true,
+        rotatedCount: rotatedCases.length,
+        rotatedCases,
+        cooldownSeconds,
+      };
+    } catch (err: any) {
+      console.error("[DemoService.rotateDemoPortfolioLifecycle Error]:", err);
+      return { success: false, error: err?.message };
+    } finally {
+      DemoService.isRotatingLifecycle = false;
+    }
+  }
+
+  /**
+   * Reset a single demo case back to its canonical baseline actionable state.
+   */
+  public async resetSingleDemoCase(caseNumber: string) {
+    return this.rotateDemoPortfolioLifecycle({ force: true, caseNumber });
+  }
+
+  /**
+   * Get the current active recovery case for live testing or demo spotlight.
+   * Prioritizes hero case REC-DEMO-005 when actionable.
+   * If REC-DEMO-005 is currently RECOVERED (in retention cooldown),
+   * dynamically rotates to the next actionable low-value case in sequence.
+   */
+  public async getActiveDemoRecoveryCase() {
+    // 1. Check REC-DEMO-005
+    const heroCase = await prisma.recoveryCase.findUnique({
+      where: { caseNumber: "REC-DEMO-005" },
+      include: { customer: true, payment: true },
+    });
+
+    if (heroCase && heroCase.status !== RecoveryCaseStatus.RECOVERED) {
+      return heroCase;
+    }
+
+    // 2. If hero case is RECOVERED (in cooldown), pick next actionable autonomous case
+    const rotationSequence = ["REC-DEMO-001", "REC-DEMO-002", "REC-DEMO-003", "REC-DEMO-007"];
+    for (const cNum of rotationSequence) {
+      const candidate = await prisma.recoveryCase.findUnique({
+        where: { caseNumber: cNum },
+        include: { customer: true, payment: true },
+      });
+      if (candidate && candidate.status !== RecoveryCaseStatus.RECOVERED) {
+        return candidate;
+      }
+    }
+
+    // 3. Fallback to hero case
+    return heroCase || (await prisma.recoveryCase.findFirstOrThrow({ include: { customer: true, payment: true } }));
+  }
+
+  /**
    * Ensure Canonical Demo Case (returns Hero Case REC-DEMO-005 for live Razorpay testing)
    */
   public async ensureCanonicalDemoCase() {
@@ -338,18 +571,25 @@ export class DemoService {
 
   /**
    * Start a controlled real Razorpay Sandbox recovery scenario on the Hero demo case (REC-DEMO-005 Orion Media ₹67,500)
+   * or dynamically selected active recovery case.
    */
   public async startDemoRecovery(options?: { amountRupees?: number; customerName?: string; caseNumber?: string }) {
     try {
-      const targetCaseNumber = options?.caseNumber || "REC-DEMO-005";
-
       // 1. Ensure portfolio is initialized
       await this.ensureDemoPortfolio();
 
-      let targetCase = await prisma.recoveryCase.findUnique({
-        where: { caseNumber: targetCaseNumber },
-        include: { customer: true, payment: true },
-      });
+      // 2. Check lifecycle rotation
+      await this.rotateDemoPortfolioLifecycle();
+
+      let targetCase;
+      if (options?.caseNumber) {
+        targetCase = await prisma.recoveryCase.findUnique({
+          where: { caseNumber: options.caseNumber },
+          include: { customer: true, payment: true },
+        });
+      } else {
+        targetCase = await this.getActiveDemoRecoveryCase();
+      }
 
       if (!targetCase) {
         targetCase = await this.ensureCanonicalDemoCase();

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
 import { prisma } from "../../../../backend/src/config/prisma";
 import { fromPaise, serializeBigInt } from "../../../../backend/src/utils/money";
+import { demoService } from "../../../../backend/src/services/demo.service";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -29,6 +30,9 @@ export async function GET(req: NextRequest) {
   const days = parseRangeToDays(range);
 
   try {
+    // Continuously rotate demo portfolio lifecycle (expired recovered cases rotate back to actionable states)
+    await demoService.rotateDemoPortfolioLifecycle();
+
     const where: any = {};
     if (status !== "ALL") where.status = status;
     if (riskLevel !== "ALL") where.riskLevel = riskLevel;

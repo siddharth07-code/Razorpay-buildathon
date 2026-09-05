@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
 import { dashboardService } from "../../../../backend/src/services/dashboard.service";
+import { demoService } from "../../../../backend/src/services/demo.service";
 import { serializeBigInt } from "../../../../backend/src/utils/money";
 
 export const dynamic = "force-dynamic";
@@ -26,6 +27,9 @@ export async function GET(req: NextRequest) {
   const days = parseRangeToDays(range);
 
   try {
+    // Continuously rotate demo portfolio lifecycle (expired recovered cases rotate back to actionable states)
+    await demoService.rotateDemoPortfolioLifecycle();
+
     const metrics = await dashboardService.getSummaryMetrics(days);
     return NextResponse.json(serializeBigInt(metrics), {
       headers: {
