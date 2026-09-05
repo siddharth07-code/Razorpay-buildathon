@@ -46,6 +46,15 @@ function mapToPrismaRootCause(rootCause: string): RootCauseType {
   }
 }
 
+export function isLegacyPlaceholderLink(url?: string | null): boolean {
+  if (!url) return false;
+  return (
+    url.includes("orionmedia_vireon") ||
+    url.includes("novacloud_vireon") ||
+    url.includes("/i/demo_")
+  );
+}
+
 export class RecoveryOrchestrator {
   /**
    * Step 1: Ingest payment failure and initialize recovery case
@@ -395,16 +404,37 @@ export class RecoveryOrchestrator {
       throw new Error(`Cannot execute action for case ${caseId}: Recovery case is already in terminal state '${recCase.status}'.`);
     }
 
-    if (recCase.status === RecoveryCaseStatus.AWAITING_PAYMENT && recCase.paymentLinkUrl && !options?.forceExecute) {
-      return {
-        success: true,
-        attemptId: recCase.id,
-        action: recCase.selectedAction || "CREATE_PAYMENT_LINK",
-        status: AttemptStatus.SUCCESS,
-        paymentLinkUrl: recCase.paymentLinkUrl,
-        razorpayReference: recCase.razorpayPaymentLinkId || recCase.paymentId || "plink_active",
-        message: "Payment link is already active and awaiting customer payment.",
-      };
+    const hasLegitimateLink =
+      Boolean(recCase.paymentLinkUrl) &&
+      !isLegacyPlaceholderLink(recCase.paymentLinkUrl);
+
+    if (recCase.status === RecoveryCaseStatus.AWAITING_PAYMENT) {
+      if (hasLegitimateLink && !options?.forceExecute) {
+        return {
+          success: true,
+          attemptId: recCase.id,
+          action: recCase.selectedAction || "CREATE_PAYMENT_LINK",
+          status: AttemptStatus.SUCCESS,
+          paymentLinkUrl: recCase.paymentLinkUrl || undefined,
+          razorpayReference: recCase.razorpayPaymentLinkId || recCase.paymentId || "plink_active",
+          message: "Payment link is already active and awaiting customer payment.",
+        };
+      }
+
+      // In AWAITING_PAYMENT without legitimate link: execute directly via executionService
+      const action = recCase.selectedAction || recCase.recommendedAction || "CREATE_PAYMENT_LINK";
+      return executionService.executeAction({
+        caseId,
+        action: action as any,
+        amountAtRisk: recCase.amountAtRisk,
+        customer: {
+          name: recCase.customer?.name || "Customer",
+          email: recCase.customer?.email || "customer@example.in",
+          phone: recCase.customer?.phone || "+919876543210",
+        },
+        paymentId: recCase.paymentId || undefined,
+        attemptNumber: recCase.retryCount + 1,
+      });
     }
 
     let currentCase = recCase;

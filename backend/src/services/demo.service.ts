@@ -127,7 +127,7 @@ export class DemoService {
       requiresHumanApproval: false,
       paymentId: "pay_demo_rec_005",
       razorpayPaymentId: null,
-      paymentLinkUrl: "https://rzp.io/i/orionmedia_vireon",
+      paymentLinkUrl: null,
     },
     {
       caseNumber: "REC-DEMO-006",

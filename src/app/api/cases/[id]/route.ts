@@ -1,8 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { repository } from "@/lib/db/repository";
 import { recoveryOrchestrator } from "../../../../../backend/src/services/orchestrator.service";
+import { executionService } from "../../../../../backend/src/services/execution.service";
 import { prisma } from "../../../../../backend/src/config/prisma";
 import { fromPaise, serializeBigInt } from "../../../../../backend/src/utils/money";
+
+function isLegacyPlaceholderLink(url?: string | null): boolean {
+  if (!url) return false;
+  return (
+    url.includes("orionmedia_vireon") ||
+    url.includes("novacloud_vireon") ||
+    url.includes("/i/demo_")
+  );
+}
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -51,7 +61,7 @@ export async function GET(
         contactCount: recCase.contactCount,
         actionsTakenCount: recCase.actionsTakenCount,
         requiresHumanApproval: recCase.requiresHumanApproval,
-        paymentLinkUrl: recCase.paymentLinkUrl || undefined,
+        paymentLinkUrl: isLegacyPlaceholderLink(recCase.paymentLinkUrl) ? undefined : (recCase.paymentLinkUrl || undefined),
         createdAt: recCase.createdAt.toISOString(),
         updatedAt: recCase.updatedAt.toISOString(),
         recoveredAt: recCase.recoveredAt?.toISOString(),
@@ -121,6 +131,7 @@ export async function POST(
     // Check if case exists in PostgreSQL
     const dbCase = await prisma.recoveryCase.findUnique({
       where: { id: caseId },
+      include: { customer: true, payment: true },
     });
 
     if (dbCase) {
@@ -152,7 +163,9 @@ export async function POST(
         }
 
         if (action === "EXECUTE_ACTION" || action === "SEND_PAYMENT_LINK" || action === "TRIGGER_RETRY") {
-          if (dbCase.paymentLinkUrl && !forceExecute) {
+          const hasLegitimateLink = Boolean(dbCase.paymentLinkUrl) && !isLegacyPlaceholderLink(dbCase.paymentLinkUrl);
+
+          if (hasLegitimateLink && !forceExecute) {
             return NextResponse.json(serializeBigInt({
               success: true,
               paymentLinkUrl: dbCase.paymentLinkUrl,
@@ -160,6 +173,35 @@ export async function POST(
               message: "1-Click Razorpay payment link is already active and awaiting customer payment.",
             }), { status: 200 });
           }
+
+          // Generate genuine Razorpay TEST payment link via executionService
+          const execResult = await executionService.executeAction({
+            caseId: dbCase.id,
+            paymentId: dbCase.paymentId || undefined,
+            orderId: dbCase.razorpayOrderId || undefined,
+            action: (dbCase.selectedAction || "CREATE_PAYMENT_LINK") as any,
+            amountAtRisk: dbCase.amountAtRisk,
+            customer: {
+              name: dbCase.customer?.name || "Customer",
+              email: dbCase.customer?.email || "customer@example.com",
+              phone: dbCase.customer?.phone || "+919876543210",
+            },
+            attemptNumber: dbCase.retryCount + 1,
+          });
+
+          const updated = await prisma.recoveryCase.findUnique({
+            where: { id: caseId },
+            include: { customer: true, payment: true },
+          });
+
+          return NextResponse.json(serializeBigInt({
+            success: execResult.success,
+            paymentLinkUrl: execResult.paymentLinkUrl,
+            alreadyAwaitingPayment: true,
+            case: updated,
+            result: execResult,
+            message: execResult.message || "Generated 1-click Razorpay payment link.",
+          }), { status: 200 });
         }
       }
 
